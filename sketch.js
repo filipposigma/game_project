@@ -1,66 +1,73 @@
-// Part 7 game project - complete p5.js sketch
-// Paste this file into the JavaScript editor in the p5.js web editor.
+let floorPos_y;
+let gameChar_x;
+let gameChar_y;
+let gameChar_world_x;
+let gameChar_velocity_y;
+let scrollPos;
+let game_score;
+let lives;
+let gameOver;
+let levelComplete;
+let isLeft;
+let isRight;
+let isFalling;
+let isPlummeting;
+let isOnPlatform;
 
-var floorPos_y;
-var gameChar_x;
-var gameChar_y;
-var gameChar_world_x;
-var gameChar_velocity_y;
-var scrollPos;
-var game_score;
-var lives;
-var levelComplete;
-var gameOver;
-var isLeft;
-var isRight;
-var isFalling;
-var isPlummeting;
-var isOnPlatform;
-var trees_x;
-var clouds;
-var mountains;
-var canyons;
-var apples;
-var platforms;
-var flagpole;
-var jumpSound;
-var backgroundMusic;
-var fallSound;
+let trees_x;
+let clouds;
+let mountains;
+let canyons;
+let apples;
+let platforms;
+let flagpole;
+
+let jumpSound;
+let backgroundMusic;
+let fallSound;
+let fallSoundPlayed;
+
+let gameTime;
+let gameStartTime;
+
+
+// --------------------------------------------------
+// PRELOAD
+// --------------------------------------------------
 
 function preload()
 {
-    soundFormats('mp3', 'wav');
-    jumpSound = loadSound('assets/jump.wav');
-    jumpSound.setVolume(0.1);
-    backgroundMusic = loadSound('assets/background-music.mp3');
-    fallSound = loadSound('assets/fall.wav');
-    fallSound.setVolume(0.15);
+    soundFormats("mp3", "wav");
+
+    jumpSound = loadSound("assets/jump.wav", function() {}, function() { jumpSound = null; });
+    fallSound = loadSound("assets/fall.wav", function() {}, function() { fallSound = null; });
+    backgroundMusic = loadSound("assets/background-music.mp3", function() {}, function() { backgroundMusic = null; });
 }
+
+
+// --------------------------------------------------
+// SETUP
+// --------------------------------------------------
 
 function setup()
 {
     createCanvas(1024, 576);
     floorPos_y = height * 0.75;
-    lives = 3;
-    startGame();
+    textFont("Courier New");
+
+    initialiseLevel();
+    startNewGame();
 }
 
-function startGame()
-{
-    gameChar_x = width / 2;
-    gameChar_y = floorPos_y;
-    gameChar_velocity_y = 0;
-    scrollPos = 0;
-    game_score = 0;
-    levelComplete = false;
-    gameOver = false;
-    isLeft = false;
-    isRight = false;
-    isFalling = false;
-    isPlummeting = false;
-    isOnPlatform = false;
 
+// --------------------------------------------------
+// INITIALISE LEVEL
+// --------------------------------------------------
+
+function initialiseLevel()
+{
     trees_x = [-700, -300, 150, 650, 1100, 1600, 2150, 2700];
+
     clouds = [
         {x_pos: -600, y_pos: 90, size: 0.9},
         {x_pos: -100, y_pos: 140, size: 1.2},
@@ -69,19 +76,22 @@ function startGame()
         {x_pos: 1480, y_pos: 65, size: 0.9},
         {x_pos: 2050, y_pos: 135, size: 1.2}
     ];
-    mountains = [
-        {x_pos: -800, height: 280},
-        {x_pos: -100, height: 230},
-        {x_pos: 650, height: 310},
-        {x_pos: 1450, height: 250},
-        {x_pos: 2200, height: 300}
-    ];
+
     canyons = [
         {x_pos: 260, width: 100},
         {x_pos: 800, width: 115},
         {x_pos: 1340, width: 130},
         {x_pos: 1900, width: 145}
     ];
+
+    mountains = [
+        {x_pos: -500, height: 250},
+        {x_pos: 430, height: 220},
+        {x_pos: 960, height: 285},
+        {x_pos: 1500, height: 240},
+        {x_pos: 2100, height: 275}
+    ];
+
     apples = [
         {x_pos: -120, y_pos: floorPos_y - 25, isFound: false},
         {x_pos: 100, y_pos: floorPos_y - 25, isFound: false},
@@ -96,21 +106,143 @@ function startGame()
         {x_pos: 2390, y_pos: floorPos_y - 25, isFound: false}
     ];
 
-    platforms = [];
-    platforms.push(createPlatform(400, floorPos_y - 100, 150));
-    platforms.push(createPlatform(990, floorPos_y - 120, 150));
-    platforms.push(createPlatform(1500, floorPos_y - 90, 175));
-    platforms.push(createPlatform(2070, floorPos_y - 145, 180));
+    platforms = [
+        createPlatform(400, floorPos_y - 100, 150),
+        createPlatform(990, floorPos_y - 120, 150),
+        createPlatform(1500, floorPos_y - 90, 175),
+        createPlatform(2070, floorPos_y - 145, 180)
+    ];
 
     flagpole = {x_pos: 2600, isReached: false};
 }
+
+
+// --------------------------------------------------
+// START NEW GAME
+// --------------------------------------------------
+
+function startNewGame()
+{
+    game_score = 0;
+    lives = 3;
+
+    gameOver = false;
+    levelComplete = false;
+
+    isLeft = false;
+    isRight = false;
+    isFalling = false;
+    isPlummeting = false;
+    isOnPlatform = false;
+
+    scrollPos = 0;
+    fallSoundPlayed = false;
+
+    // Timer starts at 0
+    gameTime = 0;
+    gameStartTime = millis();
+
+    for (let i = 0; i < apples.length; i++)
+    {
+        apples[i].isFound = false;
+    }
+
+    resetPlayer();
+    startBackgroundMusic();
+}
+
+
+// --------------------------------------------------
+// RESET PLAYER
+// --------------------------------------------------
+
+function resetPlayer()
+{
+    gameChar_x = width / 2;
+    gameChar_y = floorPos_y;
+    gameChar_world_x = gameChar_x;
+    gameChar_velocity_y = 0;
+
+    isLeft = false;
+    isRight = false;
+    isFalling = false;
+    isPlummeting = false;
+    isOnPlatform = false;
+
+    scrollPos = 0;
+    fallSoundPlayed = false;
+    flagpole.isReached = false;
+}
+
+
+// --------------------------------------------------
+// RESET AFTER LOSING LIFE
+// --------------------------------------------------
+
+function resetAfterLifeLost()
+{
+    gameChar_x = width / 2;
+    gameChar_y = floorPos_y;
+    gameChar_world_x = gameChar_x;
+    gameChar_velocity_y = 0;
+
+    isLeft = false;
+    isRight = false;
+    isFalling = false;
+    isPlummeting = false;
+    isOnPlatform = false;
+
+    scrollPos = 0;
+    fallSoundPlayed = false;
+    flagpole.isReached = false;
+}
+
+
+// --------------------------------------------------
+// BACKGROUND MUSIC
+// --------------------------------------------------
+
+function startBackgroundMusic()
+{
+    if (backgroundMusic && backgroundMusic.isLoaded() && !backgroundMusic.isPlaying())
+    {
+        backgroundMusic.loop();
+    }
+}
+
+
+function stopBackgroundMusic()
+{
+    if (backgroundMusic && backgroundMusic.isPlaying())
+    {
+        backgroundMusic.stop();
+    }
+}
+
+
+// --------------------------------------------------
+// DRAW
+// --------------------------------------------------
 
 function draw()
 {
     drawSky();
 
+    if (!gameOver && !levelComplete)
+    {
+        updateGameChar();
+        updateTimer();
+
+        if (gameChar_y > height + 100)
+        {
+            loseLife();
+        }
+    }
+
     push();
+
     translate(scrollPos, 0);
+
     drawMountains();
     drawClouds();
     drawGround();
@@ -120,488 +252,815 @@ function draw()
     drawApples();
     drawFlagpole();
     drawGameChar();
+
     pop();
 
     drawHud();
 
-    if(!gameOver && !levelComplete)
+    if (gameOver || levelComplete)
     {
-        updateGameChar();
-    }
-
-    if(gameChar_y > height + 100 && !gameOver)
-    {
-        loseLife();
-    }
-
-    if(gameOver)
-    {
-        drawEndMessage("GAME OVER", "Press Enter to play again");
-    }
-    else if(levelComplete)
-    {
-        drawEndMessage("LEVEL COMPLETE!", "Press Enter to play again");
+        drawEndMessage();
     }
 }
+
+
+// --------------------------------------------------
+// SKY
+// --------------------------------------------------
 
 function drawSky()
 {
     background(60, 183, 240);
-    noStroke();
-    fill(120, 213, 255, 80);
-    ellipse(width * 0.2, height * 0.1, 520, 260);
-    ellipse(width * 0.8, height * 0.2, 620, 310);
 }
+
+
+// --------------------------------------------------
+// GROUND
+// --------------------------------------------------
 
 function drawGround()
 {
-    var x;
-
     noStroke();
-    fill(91, 58, 31);
+
+    fill(151, 96, 55);
     rect(-2000, floorPos_y, 6000, height - floorPos_y);
-    fill(54, 158, 54);
-    rect(-2000, floorPos_y, 6000, 18);
-    fill(89, 205, 66);
-    rect(-2000, floorPos_y, 6000, 7);
 
-    for(x = -2000; x < 4000; x += 38)
+    fill(82, 157, 65);
+    rect(-2000, floorPos_y, 6000, 18);
+
+    fill(105, 178, 75);
+    rect(-2000, floorPos_y, 6000, 6);
+
+    fill(125, 77, 45);
+
+    for (let x = -1900; x < 4000; x += 90)
     {
-        noFill();
-        stroke(112, 75, 43);
-        strokeWeight(2);
-        rect(x, floorPos_y + 35, 24, 20, 3);
+        rect(x, floorPos_y + 35, 18, 5);
+        rect(x + 40, floorPos_y + 75, 12, 4);
+        rect(x + 70, floorPos_y + 110, 20, 5);
     }
-    noStroke();
 }
+
+
+// --------------------------------------------------
+// MOUNTAINS
+// --------------------------------------------------
 
 function drawMountains()
 {
-    var i;
+    noStroke();
 
-    for(i = 0; i < mountains.length; i++)
+    for (let i = 0; i < mountains.length; i++)
     {
-        fill(100, 125, 162);
+        let mountain = mountains[i];
+        let mountainWidth = 260;
+
+        fill(105, 135, 125);
+
         triangle(
-            mountains[i].x_pos,
+            mountain.x_pos,
             floorPos_y,
-            mountains[i].x_pos + 230,
-            floorPos_y - mountains[i].height,
-            mountains[i].x_pos + 470,
+            mountain.x_pos + mountainWidth / 2,
+            floorPos_y - mountain.height,
+            mountain.x_pos + mountainWidth,
             floorPos_y
         );
-        fill(141, 159, 190);
+
+        fill(175, 195, 185);
+
         triangle(
-            mountains[i].x_pos + 230,
-            floorPos_y - mountains[i].height,
-            mountains[i].x_pos + 230,
-            floorPos_y,
-            mountains[i].x_pos + 470,
+            mountain.x_pos + mountainWidth / 2,
+            floorPos_y - mountain.height,
+            mountain.x_pos + mountainWidth * 0.64,
+            floorPos_y - mountain.height * 0.55,
+            mountain.x_pos + mountainWidth,
             floorPos_y
         );
     }
 }
+
+
+// --------------------------------------------------
+// CLOUDS
+// --------------------------------------------------
 
 function drawClouds()
 {
-    var i;
+    noStroke();
 
-    for(i = 0; i < clouds.length; i++)
+    for (let i = 0; i < clouds.length; i++)
     {
-        noStroke();
-        fill(120, 140, 180, 70);
-        ellipse(clouds[i].x_pos + 10, clouds[i].y_pos + 14, 78 * clouds[i].size, 48 * clouds[i].size);
-        ellipse(clouds[i].x_pos + 55 * clouds[i].size, clouds[i].y_pos + 5, 92 * clouds[i].size, 62 * clouds[i].size);
-        ellipse(clouds[i].x_pos + 105 * clouds[i].size, clouds[i].y_pos + 14, 80 * clouds[i].size, 50 * clouds[i].size);
-        fill(250, 252, 255);
-        ellipse(clouds[i].x_pos, clouds[i].y_pos, 70 * clouds[i].size, 45 * clouds[i].size);
-        ellipse(clouds[i].x_pos + 45 * clouds[i].size, clouds[i].y_pos - 12, 85 * clouds[i].size, 60 * clouds[i].size);
-        ellipse(clouds[i].x_pos + 95 * clouds[i].size, clouds[i].y_pos, 75 * clouds[i].size, 48 * clouds[i].size);
+        let cloud = clouds[i];
+
+        push();
+
+        translate(cloud.x_pos, cloud.y_pos);
+        scale(cloud.size);
+
+        fill(215, 235, 245);
+
+        ellipse(0, 20, 110, 45);
+        ellipse(-45, 15, 70, 40);
+        ellipse(45, 15, 70, 40);
+
+        fill(255);
+
+        ellipse(0, 5, 100, 50);
+        ellipse(-45, 10, 70, 45);
+        ellipse(45, 10, 70, 45);
+        ellipse(0, -15, 70, 55);
+
+        pop();
     }
 }
+
+
+// --------------------------------------------------
+// TREES
+// --------------------------------------------------
 
 function drawTrees()
 {
-    var i;
-
-    for(i = 0; i < trees_x.length; i++)
+    for (let i = 0; i < trees_x.length; i++)
     {
-        noStroke();
-        fill(92, 54, 27);
-        rect(trees_x[i], floorPos_y - 115, 34, 115, 3);
-        fill(117, 75, 38);
-        rect(trees_x[i] + 9, floorPos_y - 110, 7, 105);
-        fill(40, 123, 46);
-        rect(trees_x[i] - 40, floorPos_y - 195, 110, 85, 8);
-        fill(51, 157, 55);
-        rect(trees_x[i] - 18, floorPos_y - 235, 68, 58, 7);
-        rect(trees_x[i] - 60, floorPos_y - 165, 55, 55, 7);
-        rect(trees_x[i] + 40, floorPos_y - 165, 55, 55, 7);
-        noFill();
-        stroke(30, 105, 36);
-        strokeWeight(2);
-        rect(trees_x[i] - 28, floorPos_y - 182, 22, 22, 3);
-        rect(trees_x[i] + 8, floorPos_y - 182, 22, 22, 3);
-        rect(trees_x[i] + 8, floorPos_y - 215, 22, 22, 3);
-        noStroke();
+        let treeX = trees_x[i];
+
+        fill(100, 62, 35);
+        rect(treeX - 16, floorPos_y - 125, 32, 125);
+
+        fill(55, 145, 60);
+
+        ellipse(treeX, floorPos_y - 170, 105, 105);
+        ellipse(treeX - 40, floorPos_y - 145, 75, 75);
+        ellipse(treeX + 40, floorPos_y - 145, 75, 75);
+        ellipse(treeX, floorPos_y - 215, 75, 75);
+
+        fill(80, 165, 70);
+
+        ellipse(treeX - 20, floorPos_y - 190, 55, 55);
+        ellipse(treeX + 25, floorPos_y - 160, 50, 50);
     }
 }
+
+
+// --------------------------------------------------
+// CANALS
+// --------------------------------------------------
 
 function drawCanyons()
 {
-    var i;
-
-    for(i = 0; i < canyons.length; i++)
+    for (let i = 0; i < canyons.length; i++)
     {
-        fill(25, 104, 174);
-        rect(canyons[i].x_pos, floorPos_y, canyons[i].width, height - floorPos_y);
-        fill(110, 210, 250, 160);
-        rect(canyons[i].x_pos, floorPos_y + 10, canyons[i].width, 5);
-        rect(canyons[i].x_pos + 12, floorPos_y + 42, canyons[i].width - 24, 4);
+        let canyon = canyons[i];
+
+        noStroke();
+        fill(60, 183, 240);
+
+        rect(
+            canyon.x_pos,
+            floorPos_y,
+            canyon.width,
+            height - floorPos_y
+        );
     }
 }
+
+
+// --------------------------------------------------
+// APPLES
+// --------------------------------------------------
 
 function drawApples()
 {
-    var i;
-
-    for(i = 0; i < apples.length; i++)
+    for (let i = 0; i < apples.length; i++)
     {
-        if(!apples[i].isFound)
+        let apple = apples[i];
+
+        if (!apple.isFound)
         {
-            noStroke();
-            fill(152, 15, 20);
-            ellipse(apples[i].x_pos, apples[i].y_pos + 3, 28, 28);
-            fill(235, 35, 35);
-            ellipse(apples[i].x_pos - 3, apples[i].y_pos, 24, 25);
-            fill(255, 140, 130);
-            ellipse(apples[i].x_pos - 8, apples[i].y_pos - 6, 6, 7);
-            stroke(90, 55, 25);
+            push();
+
+            translate(apple.x_pos, apple.y_pos);
+
+            fill(220, 45, 45);
+
+            ellipse(-7, 0, 18, 22);
+            ellipse(7, 0, 18, 22);
+
+            fill(55, 135, 55);
+            ellipse(8, -12, 13, 7);
+
+            stroke(80, 50, 30);
             strokeWeight(3);
-            line(apples[i].x_pos + 3, apples[i].y_pos - 15, apples[i].x_pos + 5, apples[i].y_pos - 24);
+
+            line(0, -9, 2, -17);
+
             noStroke();
-            fill(60, 165, 55);
-            ellipse(apples[i].x_pos + 10, apples[i].y_pos - 19, 13, 8);
+
+            pop();
         }
     }
 }
+
+
+// --------------------------------------------------
+// PLATFORM CREATOR
+// --------------------------------------------------
 
 function createPlatform(x, y, length)
 {
-    var platform = {
-        x_pos: x,
-        y_pos: y,
-        length: length,
-        draw: function()
-        {
-            var tileX;
-
-            noStroke();
-            fill(80, 50, 25);
-            rect(this.x_pos + 8, this.y_pos + 14, this.length - 16, 20, 5);
-            fill(46, 132, 47);
-            rect(this.x_pos, this.y_pos, this.length, 18, 5);
-            fill(91, 204, 66);
-            rect(this.x_pos, this.y_pos, this.length, 7, 5);
-            noFill();
-            stroke(31, 108, 37);
-            strokeWeight(2);
-            for(tileX = this.x_pos + 8; tileX < this.x_pos + this.length - 8; tileX += 22)
-            {
-                rect(tileX, this.y_pos + 8, 13, 7, 2);
-            }
-            noStroke();
-        },
-        checkContact: function(characterX, characterY)
-        {
-            if(characterX > this.x_pos && characterX < this.x_pos + this.length)
-            {
-                if(characterY >= this.y_pos - 4 && characterY <= this.y_pos + 8)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-    };
-
-    return platform;
+    return {x: x, y: y, length: length};
 }
+
+
+// --------------------------------------------------
+// DRAW PLATFORMS
+// --------------------------------------------------
 
 function drawPlatforms()
 {
-    var i;
-
-    for(i = 0; i < platforms.length; i++)
+    for (let i = 0; i < platforms.length; i++)
     {
-        platforms[i].draw();
+        let platform = platforms[i];
+
+        fill(120, 75, 42);
+        rect(platform.x, platform.y, platform.length, 18);
+
+        fill(82, 157, 65);
+        rect(platform.x, platform.y, platform.length, 6);
+
+        fill(90, 55, 35);
+
+        rect(
+            platform.x + 15,
+            platform.y + 18,
+            10,
+            floorPos_y - platform.y - 18
+        );
+
+        rect(
+            platform.x + platform.length - 25,
+            platform.y + 18,
+            10,
+            floorPos_y - platform.y - 18
+        );
     }
 }
+
+
+// --------------------------------------------------
+// FLAGPOLE
+// --------------------------------------------------
 
 function drawFlagpole()
 {
-    stroke(91, 54, 28);
-    strokeWeight(7);
-    line(flagpole.x_pos, floorPos_y, flagpole.x_pos, floorPos_y - 150);
+    stroke(60);
+    strokeWeight(6);
+
+    line(
+        flagpole.x_pos,
+        floorPos_y,
+        flagpole.x_pos,
+        floorPos_y - 180
+    );
+
     noStroke();
-    fill(210, 165, 90);
-    rect(flagpole.x_pos - 44, floorPos_y - 145, 88, 34, 5);
-    fill(100, 62, 31);
-    textAlign(CENTER);
-    textSize(15);
-    text("FINISH", flagpole.x_pos, floorPos_y - 122);
-    textAlign(LEFT);
-    fill(245, 72, 52);
-    if(flagpole.isReached)
-    {
-        triangle(flagpole.x_pos, floorPos_y - 150, flagpole.x_pos + 72, floorPos_y - 130, flagpole.x_pos, floorPos_y - 108);
-    }
-    else
-    {
-        triangle(flagpole.x_pos, floorPos_y - 40, flagpole.x_pos + 72, floorPos_y - 20, flagpole.x_pos, floorPos_y + 2);
-    }
+
+    fill(220, 50, 50);
+
+    triangle(
+        flagpole.x_pos,
+        floorPos_y - 175,
+        flagpole.x_pos + 70,
+        floorPos_y - 150,
+        flagpole.x_pos,
+        floorPos_y - 125
+    );
+
+    fill(255);
+
+    textFont("Courier New");
+    textSize(13);
+    textStyle(BOLD);
+    textAlign(CENTER, CENTER);
+
+    text(
+        "FINISH",
+        flagpole.x_pos + 28,
+        floorPos_y - 150
+    );
+
+    textAlign(LEFT, BASELINE);
 }
+
+
+// --------------------------------------------------
+// CHARACTER
+// --------------------------------------------------
 
 function drawGameChar()
 {
-    noStroke();
-    fill(45, 45, 55);
-    rect(gameChar_world_x - 17, gameChar_y - 19, 13, 19, 3);
-    rect(gameChar_world_x + 4, gameChar_y - 19, 13, 19, 3);
-    fill(28, 83, 175);
-    rect(gameChar_world_x - 18, gameChar_y - 53, 36, 38, 6);
-    fill(49, 115, 220);
-    rect(gameChar_world_x - 13, gameChar_y - 50, 26, 25, 4);
-    fill(255, 215, 176);
-    rect(gameChar_world_x - 15, gameChar_y - 83, 30, 31, 6);
-    fill(94, 53, 27);
-    rect(gameChar_world_x - 16, gameChar_y - 88, 32, 12, 6);
-    rect(gameChar_world_x - 12, gameChar_y - 94, 20, 12, 5);
-    fill(255);
-    ellipse(gameChar_world_x - 6, gameChar_y - 68, 4, 5);
-    ellipse(gameChar_world_x + 6, gameChar_y - 68, 4, 5);
+    push();
+
+    translate(gameChar_x - scrollPos, gameChar_y);
+    scale(0.72);
+
+    // BODY
+    fill(45, 90, 180);
+    rect(-12, -48, 24, 34, 4);
+
+    // HEAD
+    fill(240, 190, 145);
+    ellipse(0, -62, 25, 25);
+
+    // BLACK HAIR
+    fill(15, 15, 15);
+
+    arc(0, -65, 27, 25, PI, TWO_PI);
+
+    rect(-13, -68, 5, 13);
+    rect(8, -68, 5, 13);
+
+    // EYES
+    fill(20);
+
+    ellipse(-5, -62, 3, 4);
+    ellipse(5, -62, 3, 4);
+
+    // LEGS
+    fill(40, 55, 100);
+
+    rect(-10, -14, 8, 14);
+    rect(2, -14, 8, 14);
+
+    // SHOES
+    fill(35);
+
+    rect(-13, -3, 12, 6, 2);
+    rect(1, -3, 12, 6, 2);
+
+    // ARMS
+    fill(240, 190, 145);
+
+    rect(-18, -45, 7, 23, 3);
+    rect(11, -45, 7, 23, 3);
+
+    pop();
 }
+
+
+// --------------------------------------------------
+// UPDATE CHARACTER
+// --------------------------------------------------
 
 function updateGameChar()
 {
-    gameChar_world_x = gameChar_x - scrollPos;
+    if (isPlummeting)
+    {
+        gameChar_velocity_y += 1;
+        gameChar_y += gameChar_velocity_y;
+        return;
+    }
+
     moveGameChar();
-    checkCanyons();
     applyGravity();
+
+    gameChar_world_x = gameChar_x - scrollPos;
+
+    isOnPlatform = false;
+
+    for (let i = 0; i < platforms.length; i++)
+    {
+        let platform = platforms[i];
+
+        if (
+            gameChar_world_x > platform.x &&
+            gameChar_world_x < platform.x + platform.length &&
+            gameChar_y >= platform.y - 5 &&
+            gameChar_y <= platform.y + 20 &&
+            gameChar_velocity_y >= 0
+        )
+        {
+            gameChar_y = platform.y;
+            gameChar_velocity_y = 0;
+            isFalling = false;
+            isOnPlatform = true;
+        }
+    }
+
+    checkCanyons();
     checkApples();
     checkFlagpole();
 }
 
-function jump()
-{
-    if(!isPlummeting && (gameChar_y >= floorPos_y || isOnPlatform))
-    {
-        gameChar_y = min(gameChar_y, floorPos_y);
-        gameChar_velocity_y = -14;
-        isFalling = true;
-        isOnPlatform = false;
-        jumpSound.play();
-    }
-}
+
+// --------------------------------------------------
+// MOVE CHARACTER
+// --------------------------------------------------
 
 function moveGameChar()
 {
-    if(isLeft && !isPlummeting)
+    if (isLeft)
     {
-        if(gameChar_x > width * 0.4)
-        {
-            gameChar_x -= 5;
-        }
-        else
-        {
-            scrollPos += 5;
-        }
+        gameChar_x -= 5;
     }
-    if(isRight && !isPlummeting)
+
+    if (isRight)
     {
-        if(gameChar_x < width * 0.6)
-        {
-            gameChar_x += 5;
-        }
-        else
-        {
-            scrollPos -= 5;
-        }
+        gameChar_x += 5;
     }
-    gameChar_world_x = gameChar_x - scrollPos;
+
+    let leftBoundary = width * 0.25;
+    let rightBoundary = width * 0.75;
+
+    if (gameChar_x < leftBoundary)
+    {
+        scrollPos += leftBoundary - gameChar_x;
+        gameChar_x = leftBoundary;
+    }
+
+    if (gameChar_x > rightBoundary)
+    {
+        scrollPos -= gameChar_x - rightBoundary;
+        gameChar_x = rightBoundary;
+    }
 }
+
+
+// --------------------------------------------------
+// GRAVITY
+// --------------------------------------------------
 
 function applyGravity()
 {
-    var i;
-
-    // A canyon fall is deliberately slower than a normal jump or fall.
-    if(isPlummeting)
+    if (!isOnPlatform)
     {
-        gameChar_y += 2;
-        isFalling = true;
-        return;
-    }
+        gameChar_velocity_y += 0.8;
+        gameChar_y += gameChar_velocity_y;
 
-    isOnPlatform = false;
-    for(i = 0; i < platforms.length; i++)
-    {
-        if(gameChar_velocity_y >= 0 && platforms[i].checkContact(gameChar_world_x, gameChar_y))
+        if (gameChar_y >= floorPos_y)
         {
-            isOnPlatform = true;
-            gameChar_y = platforms[i].y_pos;
+            gameChar_y = floorPos_y;
             gameChar_velocity_y = 0;
+            isFalling = false;
+        }
+        else
+        {
+            isFalling = true;
         }
     }
+}
 
-    // Only land on the ground while falling. This lets a negative velocity
-    // move the character upward when the Space bar starts a jump.
-    if(!isPlummeting && !isOnPlatform && gameChar_y >= floorPos_y && gameChar_velocity_y >= 0)
+
+// --------------------------------------------------
+// JUMP
+// --------------------------------------------------
+
+function jump()
+{
+    if (!isFalling && !isPlummeting)
     {
-        gameChar_y = floorPos_y;
-        gameChar_velocity_y = 0;
-        isFalling = false;
-    }
-    else if(!isOnPlatform)
-    {
-        gameChar_velocity_y += 0.7;
-        gameChar_y += gameChar_velocity_y;
+        gameChar_velocity_y = -14;
         isFalling = true;
+
+        if (jumpSound && jumpSound.isLoaded())
+        {
+            jumpSound.stop();
+            jumpSound.play();
+        }
     }
 }
+
+
+// --------------------------------------------------
+// CHECK CANALS
+// --------------------------------------------------
 
 function checkCanyons()
 {
-    var i;
+    let characterLeft = gameChar_world_x - 12;
+    let characterRight = gameChar_world_x + 12;
 
-    if(gameChar_y !== floorPos_y)
+    for (let i = 0; i < canyons.length; i++)
+    {
+        let canyon = canyons[i];
+
+        let insideCanyon =
+            characterRight > canyon.x_pos &&
+            characterLeft < canyon.x_pos + canyon.width &&
+            gameChar_y >= floorPos_y - 5;
+
+        if (insideCanyon)
+        {
+            if (!isPlummeting)
+            {
+                isPlummeting = true;
+                isFalling = true;
+
+                isLeft = false;
+                isRight = false;
+
+                stopBackgroundMusic();
+
+                if (
+                    !fallSoundPlayed &&
+                    fallSound &&
+                    fallSound.isLoaded()
+                )
+                {
+                    fallSoundPlayed = true;
+                    fallSound.stop();
+                    fallSound.play();
+                }
+            }
+
+            return;
+        }
+    }
+}
+
+
+// --------------------------------------------------
+// CHECK APPLES
+// --------------------------------------------------
+
+function checkApples()
+{
+    for (let i = 0; i < apples.length; i++)
+    {
+        let apple = apples[i];
+
+        if (!apple.isFound)
+        {
+            let distance = dist(
+                gameChar_world_x,
+                gameChar_y - 45,
+                apple.x_pos,
+                apple.y_pos
+            );
+
+            if (distance < 30)
+            {
+                apple.isFound = true;
+                game_score++;
+            }
+        }
+    }
+}
+
+
+// --------------------------------------------------
+// CHECK FLAGPOLE
+// --------------------------------------------------
+
+function checkFlagpole()
+{
+    let distance = abs(
+        gameChar_world_x - flagpole.x_pos
+    );
+
+    if (distance < 35 && !flagpole.isReached)
+    {
+        flagpole.isReached = true;
+        levelComplete = true;
+
+        isLeft = false;
+        isRight = false;
+
+        stopBackgroundMusic();
+    }
+}
+
+
+// --------------------------------------------------
+// TIMER
+// --------------------------------------------------
+
+function updateTimer()
+{
+    gameTime = floor(
+        (millis() - gameStartTime) / 1000
+    );
+}
+
+
+// --------------------------------------------------
+// LOSE LIFE
+// --------------------------------------------------
+
+function loseLife()
+{
+    if (gameOver || levelComplete)
     {
         return;
     }
 
-    for(i = 0; i < canyons.length; i++)
-    {
-        if(gameChar_world_x > canyons[i].x_pos && gameChar_world_x < canyons[i].x_pos + canyons[i].width)
-        {
-            isPlummeting = true;
-            isLeft = false;
-            isRight = false;
-            backgroundMusic.stop();
-            fallSound.play();
-        }
-    }
-}
+    lives--;
 
-function checkApples()
-{
-    var i;
-
-    for(i = 0; i < apples.length; i++)
+    if (lives > 0)
     {
-        if(!apples[i].isFound && dist(gameChar_world_x, gameChar_y - 35, apples[i].x_pos, apples[i].y_pos) < 32)
-        {
-            apples[i].isFound = true;
-            game_score += 1;
-        }
-    }
-}
-
-function checkFlagpole()
-{
-    if(abs(gameChar_world_x - flagpole.x_pos) < 25)
-    {
-        flagpole.isReached = true;
-        levelComplete = true;
-    }
-}
-
-function loseLife()
-{
-    lives -= 1;
-    if(lives > 0)
-    {
-        startGame();
+        resetAfterLifeLost();
+        startBackgroundMusic();
     }
     else
     {
         gameOver = true;
+
+        isPlummeting = false;
+        isFalling = false;
+
+        stopBackgroundMusic();
+
+        if (fallSound && fallSound.isPlaying())
+        {
+            fallSound.stop();
+        }
     }
 }
+
+
+// --------------------------------------------------
+// HUD
+// --------------------------------------------------
 
 function drawHud()
 {
-    noStroke();
-    fill(25, 55, 78, 220);
-    rect(20, 20, 210, 55, 12);
-    rect(20, 85, 210, 55, 12);
-    fill(235, 40, 35);
-    ellipse(50, 47, 28, 28);
-    fill(255, 145, 135);
-    ellipse(44, 41, 6, 7);
-    fill(255, 60, 70);
-    ellipse(48, 108, 19, 24);
-    ellipse(63, 108, 19, 24);
-    triangle(39, 112, 72, 112, 55, 130);
+    push();
+
+    resetMatrix();
+
     fill(255);
-    textStyle(BOLD);
-    textSize(23);
-    text("Apples: " + game_score, 82, 55);
-    text("Lives: " + lives, 82, 120);
-    textStyle(NORMAL);
     noStroke();
+
+    textFont("Courier New");
+    textStyle(BOLD);
+
+    // APPLES
+    textAlign(LEFT, TOP);
+    textSize(28);
+    text("APPLES", 55, 24);
+
+    textSize(25);
+    text(formatApples(game_score), 55, 52);
+
+
+    // LIVES
+    textAlign(CENTER, TOP);
+    textSize(28);
+    text("LIVES", width / 2, 24);
+
+    textSize(25);
+    text(lives, width / 2, 52);
+
+
+    // TIME
+    textAlign(RIGHT, TOP);
+    textSize(28);
+    text("TIME", width - 70, 24);
+
+    textSize(25);
+    text(gameTime, width - 70, 52);
+
+    pop();
+
+    textAlign(LEFT, BASELINE);
+    textStyle(NORMAL);
 }
 
-function drawEndMessage(title, subtitle)
+
+// --------------------------------------------------
+// FORMAT APPLES
+// --------------------------------------------------
+
+function formatApples(applesCollected)
 {
-    fill(0, 150);
-    rect(0, 0, width, height);
-    textAlign(CENTER);
-    fill(255);
-    textSize(48);
-    text(title, width / 2, height / 2 - 15);
-    textSize(22);
-    text(subtitle, width / 2, height / 2 + 30);
-    textAlign(LEFT);
+    let appleString = applesCollected.toString();
+
+    while (appleString.length < 2)
+    {
+        appleString = "0" + appleString;
+    }
+
+    return appleString;
 }
+
+
+// --------------------------------------------------
+// END MESSAGE
+// --------------------------------------------------
+
+function drawEndMessage()
+{
+    fill(255, 255, 255, 230);
+
+    rect(
+        width / 2 - 230,
+        height / 2 - 80,
+        460,
+        160,
+        10
+    );
+
+    fill(30, 45, 55);
+
+    textFont("Helvetica");
+    textStyle(NORMAL);
+    textAlign(CENTER, CENTER);
+
+    if (levelComplete)
+    {
+        textSize(32);
+
+        text(
+            "Level Complete",
+            width / 2,
+            height / 2 - 25
+        );
+
+        textSize(18);
+
+        text(
+            "Score: " + game_score + "    Press R to restart",
+            width / 2,
+            height / 2 + 25
+        );
+    }
+    else if (gameOver)
+    {
+        textSize(32);
+
+        text(
+            "Game Over",
+            width / 2,
+            height / 2 - 25
+        );
+
+        textSize(18);
+
+        text(
+            "Score: " + game_score + "    Press R to restart",
+            width / 2,
+            height / 2 + 25
+        );
+    }
+
+    textAlign(LEFT, BASELINE);
+}
+
+
+// --------------------------------------------------
+// KEY PRESSED
+// --------------------------------------------------
 
 function keyPressed()
 {
-
-    if(!backgroundMusic.isPlaying())
+    if (typeof userStartAudio === "function")
     {
-        backgroundMusic.setVolume(0.2);
-        backgroundMusic.loop();
+        userStartAudio();
     }
 
-    if((gameOver || levelComplete) && keyCode === ENTER)
+    if (key === "r" || key === "R")
     {
-        lives = 3;
-        startGame();
+        startNewGame();
         return;
     }
 
-    if(keyCode === LEFT_ARROW)
+    if (gameOver || levelComplete)
+    {
+        return;
+    }
+
+    startBackgroundMusic();
+
+    if (keyCode === LEFT_ARROW)
     {
         isLeft = true;
     }
-    if(keyCode === RIGHT_ARROW)
+
+    if (keyCode === RIGHT_ARROW)
     {
         isRight = true;
     }
-    if(key === ' ' || keyCode === 32)
+
+    if (keyCode === UP_ARROW || key === " ")
     {
         jump();
-        return false;
     }
 }
 
+
+// --------------------------------------------------
+// KEY RELEASED
+// --------------------------------------------------
+
 function keyReleased()
 {
-    if(keyCode === LEFT_ARROW)
+    if (keyCode === LEFT_ARROW)
     {
         isLeft = false;
     }
-    if(keyCode === RIGHT_ARROW)
+
+    if (keyCode === RIGHT_ARROW)
     {
         isRight = false;
     }
