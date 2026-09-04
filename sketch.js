@@ -1,34 +1,34 @@
-let floorPos_y;
-let gameChar_x;
-let gameChar_y;
-let gameChar_world_x;
-let gameChar_velocity_y;
-let scrollPos;
-let game_score;
-let lives;
-let gameOver;
-let levelComplete;
-let isLeft;
-let isRight;
-let isFalling;
-let isPlummeting;
-let isOnPlatform;
+var floorPos_y;
+var gameChar_x;
+var gameChar_y;
+var gameChar_world_x;
+var gameChar_velocity_y;
+var scrollPos;
+var game_score;
+var lives;
+var gameOver;
+var levelComplete;
+var isLeft;
+var isRight;
+var isFalling;
+var isPlummeting;
+var isOnPlatform;
 
-let trees_x;
-let clouds;
-let mountains;
-let canyons;
-let apples;
-let platforms;
-let flagpole;
+var trees_x;
+var clouds;
+var mountains;
+var canyons;
+var apples;
+var platforms;
+var flagpole;
 
-let jumpSound;
-let backgroundMusic;
-let fallSound;
-let fallSoundPlayed;
+var jumpSound;
+var backgroundMusic;
+var fallSound;
+var fallSoundPlayed;
 
-let gameTime;
-let gameStartTime;
+var gameTime;
+var gameStartTime;
 
 
 // --------------------------------------------------
@@ -52,7 +52,7 @@ function preload()
 function setup()
 {
     createCanvas(1024, 576);
-    floorPos_y = height * 0.75;
+    floorPos_y = floor(height * 0.87);
     textFont("Courier New");
 
     initialiseLevel();
@@ -69,12 +69,12 @@ function initialiseLevel()
     trees_x = [-700, -300, 150, 650, 1100, 1600, 2150, 2700];
 
     clouds = [
-        {x_pos: -600, y_pos: 90, size: 0.9},
-        {x_pos: -100, y_pos: 140, size: 1.2},
-        {x_pos: 420, y_pos: 70, size: 0.8},
-        {x_pos: 950, y_pos: 120, size: 1.1},
-        {x_pos: 1480, y_pos: 65, size: 0.9},
-        {x_pos: 2050, y_pos: 135, size: 1.2}
+        {x_pos: -600, y_pos: 90, size: 0.6},
+        {x_pos: -100, y_pos: 140, size: 0.8},
+        {x_pos: 420, y_pos: 70, size: 0.5},
+        {x_pos: 950, y_pos: 120, size: 0.7},
+        {x_pos: 1480, y_pos: 65, size: 0.6},
+        {x_pos: 2050, y_pos: 135, size: 0.8}
     ];
 
     canyons = [
@@ -107,7 +107,7 @@ function initialiseLevel()
     ];
 
     platforms = [
-        createPlatform(400, floorPos_y - 100, 150),
+        createPlatform(450, floorPos_y - 100, 50),
         createPlatform(990, floorPos_y - 120, 150),
         createPlatform(1500, floorPos_y - 90, 175),
         createPlatform(2070, floorPos_y - 145, 180)
@@ -142,7 +142,7 @@ function startNewGame()
     gameTime = 0;
     gameStartTime = millis();
 
-    for (let i = 0; i < apples.length; i++)
+    for (var i = 0; i < apples.length; i++)
     {
         apples[i].isFound = false;
     }
@@ -270,7 +270,7 @@ function draw()
 
 function drawSky()
 {
-    background(60, 183, 240);
+    background(92, 148, 252);
 }
 
 
@@ -282,18 +282,12 @@ function drawGround()
 {
     noStroke();
 
-    fill(151, 96, 55);
+    fill(200, 76, 12);
     rect(-2000, floorPos_y, 6000, height - floorPos_y);
 
-    fill(82, 157, 65);
-    rect(-2000, floorPos_y, 6000, 18);
+    fill(0, 0, 0);
 
-    fill(105, 178, 75);
-    rect(-2000, floorPos_y, 6000, 6);
-
-    fill(125, 77, 45);
-
-    for (let x = -1900; x < 4000; x += 90)
+    for (var x = -1900; x < 4000; x += 90)
     {
         rect(x, floorPos_y + 35, 18, 5);
         rect(x + 40, floorPos_y + 75, 12, 4);
@@ -310,10 +304,10 @@ function drawMountains()
 {
     noStroke();
 
-    for (let i = 0; i < mountains.length; i++)
+    for (var i = 0; i < mountains.length; i++)
     {
-        let mountain = mountains[i];
-        let mountainWidth = 260;
+        var mountain = mountains[i];
+        var mountainWidth = 260;
 
         fill(105, 135, 125);
 
@@ -348,9 +342,9 @@ function drawClouds()
 {
     noStroke();
 
-    for (let i = 0; i < clouds.length; i++)
+    for (var i = 0; i < clouds.length; i++)
     {
-        let cloud = clouds[i];
+        var cloud = clouds[i];
 
         push();
 
@@ -381,24 +375,18 @@ function drawClouds()
 
 function drawTrees()
 {
-    for (let i = 0; i < trees_x.length; i++)
+    for (var i = 0; i < trees_x.length; i++)
     {
-        let treeX = trees_x[i];
+        var treeX = trees_x[i];
 
-        fill(100, 62, 35);
-        rect(treeX - 16, floorPos_y - 125, 32, 125);
-
-        fill(55, 145, 60);
+        fill(0, 168, 0);
 
         ellipse(treeX, floorPos_y - 170, 105, 105);
         ellipse(treeX - 40, floorPos_y - 145, 75, 75);
         ellipse(treeX + 40, floorPos_y - 145, 75, 75);
         ellipse(treeX, floorPos_y - 215, 75, 75);
 
-        fill(80, 165, 70);
-
-        ellipse(treeX - 20, floorPos_y - 190, 55, 55);
-        ellipse(treeX + 25, floorPos_y - 160, 50, 50);
+        fill(128, 208, 16);
     }
 }
 
@@ -409,12 +397,12 @@ function drawTrees()
 
 function drawCanyons()
 {
-    for (let i = 0; i < canyons.length; i++)
+    for (var i = 0; i < canyons.length; i++)
     {
-        let canyon = canyons[i];
+        var canyon = canyons[i];
 
         noStroke();
-        fill(60, 183, 240);
+        fill(92, 148, 252);
 
         rect(
             canyon.x_pos,
@@ -432,9 +420,9 @@ function drawCanyons()
 
 function drawApples()
 {
-    for (let i = 0; i < apples.length; i++)
+    for (var i = 0; i < apples.length; i++)
     {
-        let apple = apples[i];
+        var apple = apples[i];
 
         if (!apple.isFound)
         {
@@ -479,31 +467,14 @@ function createPlatform(x, y, length)
 
 function drawPlatforms()
 {
-    for (let i = 0; i < platforms.length; i++)
+    for (var i = 0; i < platforms.length; i++)
     {
-        let platform = platforms[i];
+        var platform = platforms[i];
 
-        fill(120, 75, 42);
-        rect(platform.x, platform.y, platform.length, 18);
+        fill(252, 152, 56);
+        rect(platform.x, platform.y, platform.length, 24);
 
-        fill(82, 157, 65);
-        rect(platform.x, platform.y, platform.length, 6);
-
-        fill(90, 55, 35);
-
-        rect(
-            platform.x + 15,
-            platform.y + 18,
-            10,
-            floorPos_y - platform.y - 18
-        );
-
-        rect(
-            platform.x + platform.length - 25,
-            platform.y + 18,
-            10,
-            floorPos_y - platform.y - 18
-        );
+       fill(90, 55, 35);
     }
 }
 
@@ -629,9 +600,9 @@ function updateGameChar()
 
     isOnPlatform = false;
 
-    for (let i = 0; i < platforms.length; i++)
+    for (var i = 0; i < platforms.length; i++)
     {
-        let platform = platforms[i];
+        var platform = platforms[i];
 
         if (
             gameChar_world_x > platform.x &&
@@ -670,8 +641,8 @@ function moveGameChar()
         gameChar_x += 5;
     }
 
-    let leftBoundary = width * 0.25;
-    let rightBoundary = width * 0.75;
+    var leftBoundary = width * 0.25;
+    var rightBoundary = width * 0.75;
 
     if (gameChar_x < leftBoundary)
     {
@@ -738,14 +709,14 @@ function jump()
 
 function checkCanyons()
 {
-    let characterLeft = gameChar_world_x - 12;
-    let characterRight = gameChar_world_x + 12;
+    var characterLeft = gameChar_world_x - 12;
+    var characterRight = gameChar_world_x + 12;
 
-    for (let i = 0; i < canyons.length; i++)
+    for (var i = 0; i < canyons.length; i++)
     {
-        let canyon = canyons[i];
+        var canyon = canyons[i];
 
-        let insideCanyon =
+        var insideCanyon =
             characterRight > canyon.x_pos &&
             characterLeft < canyon.x_pos + canyon.width &&
             gameChar_y >= floorPos_y - 5;
@@ -786,13 +757,13 @@ function checkCanyons()
 
 function checkApples()
 {
-    for (let i = 0; i < apples.length; i++)
+    for (var i = 0; i < apples.length; i++)
     {
-        let apple = apples[i];
+        var apple = apples[i];
 
         if (!apple.isFound)
         {
-            let distance = dist(
+            var distance = dist(
                 gameChar_world_x,
                 gameChar_y - 45,
                 apple.x_pos,
@@ -815,7 +786,7 @@ function checkApples()
 
 function checkFlagpole()
 {
-    let distance = abs(
+    var distance = abs(
         gameChar_world_x - flagpole.x_pos
     );
 
@@ -903,7 +874,6 @@ function drawHud()
     textSize(25);
     text(formatApples(game_score), 55, 52);
 
-
     // LIVES
     textAlign(CENTER, TOP);
     textSize(28);
@@ -911,7 +881,6 @@ function drawHud()
 
     textSize(25);
     text(lives, width / 2, 52);
-
 
     // TIME
     textAlign(RIGHT, TOP);
@@ -934,7 +903,7 @@ function drawHud()
 
 function formatApples(applesCollected)
 {
-    let appleString = applesCollected.toString();
+    var appleString = applesCollected.toString();
 
     while (appleString.length < 2)
     {
