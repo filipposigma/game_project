@@ -2,7 +2,7 @@
 // AUDIO
 // --------------------------------------------------
 
-import { game } from './game.js';
+import {game} from './game.js';
 
 export const audioState = {
     jumpSound: null,

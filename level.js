@@ -2,7 +2,7 @@
 // LEVEL
 // --------------------------------------------------
 
-import { world } from './world.js';
+import {world} from './world.js';
 
 export let treesX = [];
 export let clouds = [];
@@ -26,39 +26,39 @@ export function initialiseLevel() {
     treesX = [-700, -300, 150, 650, 1100, 1600, 2150, 2700];
 
     clouds = [
-        { xPos: -600, yPos: 90, size: 0.6 },
-        { xPos: -100, yPos: 140, size: 0.8 },
-        { xPos: 420, yPos: 70, size: 0.5 },
-        { xPos: 950, yPos: 120, size: 0.7 },
-        { xPos: 1480, yPos: 65, size: 0.6 },
-        { xPos: 2050, yPos: 135, size: 0.8 }
+        {xPos: -600, yPos: 90, size: 0.6},
+        {xPos: -100, yPos: 140, size: 0.8},
+        {xPos: 420, yPos: 70, size: 0.5},
+        {xPos: 950, yPos: 120, size: 0.7},
+        {xPos: 1480, yPos: 65, size: 0.6},
+        {xPos: 2050, yPos: 135, size: 0.8}
     ];
 
     canyons = [
-        { xPos: 260, width: 100 },
-        { xPos: 800, width: 100 },
-        { xPos: 1340, width: 100 },
-        { xPos: 1900, width: 100 }
+        {xPos: 260, width: 100},
+        {xPos: 800, width: 100},
+        {xPos: 1340, width: 100},
+        {xPos: 1900, width: 100}
     ];
 
     mountains = [
-        { xPos: -500, height: 250 },
-        { xPos: 430, height: 220 },
-        { xPos: 960, height: 285 },
-        { xPos: 1500, height: 240 },
-        { xPos: 2100, height: 275 }
+        {xPos: -500, height: 250},
+        {xPos: 430, height: 220},
+        {xPos: 960, height: 285},
+        {xPos: 1500, height: 240},
+        {xPos: 2100, height: 275}
     ];
 
     stars = [
-        { xPos: 100, yPos: world.floorPosY - 25, isFound: false },
-        { xPos: 470, yPos: world.floorPosY - 145, isFound: false },
-        { xPos: 735, yPos: world.floorPosY - 25, isFound: false },
-        { xPos: 1065, yPos: world.floorPosY - 165, isFound: false },
-        { xPos: 1560, yPos: world.floorPosY - 130, isFound: false },
-        { xPos: 2140, yPos: world.floorPosY - 190, isFound: false },
-        { xPos: 2390, yPos: world.floorPosY - 25, isFound: false },
-        { xPos: 2360, yPos: world.floorPosY - 125, isFound: false },
-        { xPos: 2520, yPos: world.floorPosY - 225, isFound: false }
+        {xPos: 100, yPos: world.floorPosY - 25, isFound: false},
+        {xPos: 470, yPos: world.floorPosY - 145, isFound: false},
+        {xPos: 735, yPos: world.floorPosY - 25, isFound: false},
+        {xPos: 1065, yPos: world.floorPosY - 165, isFound: false},
+        {xPos: 1560, yPos: world.floorPosY - 130, isFound: false},
+        {xPos: 2140, yPos: world.floorPosY - 190, isFound: false},
+        {xPos: 2390, yPos: world.floorPosY - 25, isFound: false},
+        {xPos: 2360, yPos: world.floorPosY - 125, isFound: false},
+        {xPos: 2520, yPos: world.floorPosY - 225, isFound: false}
     ];
 
     platforms = [

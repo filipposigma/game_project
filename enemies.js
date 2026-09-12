@@ -2,8 +2,8 @@
 // ENEMIES
 // --------------------------------------------------
 
-import { world } from './world.js';
-import { canyons } from './level.js';
+import {world} from './world.js';
+import {canyons} from './level.js';
 
 export let enemies = [];
 let enemySpawnTimer = 0;

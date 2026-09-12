@@ -2,10 +2,10 @@
 // PLAYER
 // --------------------------------------------------
 
-import { world } from './world.js';
-import { game } from './game.js';
-import { canyons, stars, platforms, flagpole } from './level.js';
-import { enemies, resetEnemies, updateEnemies } from './enemies.js';
+import {world} from './world.js';
+import {game} from './game.js';
+import {canyons, stars, platforms, flagpole} from './level.js';
+import {enemies, resetEnemies, updateEnemies} from './enemies.js';
 import {
     stopBackgroundMusic,
     playFallSound,
@@ -295,7 +295,7 @@ export function drawGameChar() {
 
     noStroke();
 
-    // Walking animation offsets for legs/feet
+    // Walking animation
     let stepOffsetL = 0;
     let stepOffsetR = 0;
 
@@ -369,9 +369,9 @@ export function drawCharacterShape(stepOffsetL, stepOffsetR, facingRight) {
     fill(232, 168, 110);
     rect(-12, -37, 24, 3);
 
-    // HAIR / CAP
+    // HAIR
 
-    fill(60, 40, 25);
+    fill(0);
     rect(-13, -59, 26, 8);
     rect(-14, -53, 6, 5);
 

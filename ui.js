@@ -2,8 +2,8 @@
 // UI
 // --------------------------------------------------
 
-import { game } from './game.js';
-import { drawCharacterShape } from './player.js';
+import {game} from './game.js';
+import {drawCharacterShape} from './player.js';
 
 // --------------------------------------------------
 // HUD
@@ -91,7 +91,7 @@ export function drawEndMessage() {
 // --------------------------------------------------
 
 function drawLevelCompleteScreen() {
-    background(0);
+    background(221, 125, 13);
 
     noStroke();
     fill(255);
@@ -99,7 +99,7 @@ function drawLevelCompleteScreen() {
     textStyle(BOLD);
     textAlign(CENTER, CENTER);
     textSize(54);
-    text("LEVEL COMPLETE", width / 2, height / 2 - 140);
+    text("LEVEL 1 COMPLETE", width / 2, height / 2 - 140);
 
     push();
     translate(width / 2, height / 2 + 60);
