@@ -12,6 +12,7 @@ let isLeft;
 let isRight;
 let isFalling;
 let isPlummeting;
+let isDying;
 let isOnPlatform;
 
 let treesX;
@@ -64,10 +65,6 @@ function setup() {
     initialiseLevel();
     startNewGame();
 
-    // Browsers block audio until the very first user interaction
-    // (click, tap, or key press) anywhere on the page. userStartAudio()
-    // with no arguments listens for that first interaction itself, so
-    // the music starts as soon as that happens.
     if (typeof userStartAudio === "function") {
         userStartAudio().then(() => {
             startBackgroundMusic();
@@ -92,10 +89,10 @@ function initialiseLevel() {
     ];
 
     canyons = [
-        { xPos: 260, width: 90 },
-        { xPos: 800, width: 90 },
-        { xPos: 1340, width: 90 },
-        { xPos: 1900, width: 90 }
+        { xPos: 260, width: 100 },
+        { xPos: 800, width: 100 },
+        { xPos: 1340, width: 100 },
+        { xPos: 1900, width: 100 }
     ];
 
     mountains = [
@@ -115,8 +112,7 @@ function initialiseLevel() {
         { xPos: 2140, yPos: floorPosY - 190, isFound: false },
         { xPos: 2390, yPos: floorPosY - 25, isFound: false },
         { xPos: 2360, yPos: floorPosY - 125, isFound: false },
-        { xPos: 2520, yPos: floorPosY - 225, isFound: false },
-        { xPos: 2520, yPos: floorPosY - 340, isFound: false }
+        { xPos: 2520, yPos: floorPosY - 225, isFound: false }
     ];
 
     platforms = [
@@ -126,8 +122,7 @@ function initialiseLevel() {
         createPlatform(2070, floorPosY - 145, 70),
         createPlatform(2250, floorPosY - 50, 60),
         createPlatform(2330, floorPosY - 100, 60),
-        createPlatform(2410, floorPosY - 150, 60),
-        createPlatform(2490, floorPosY - 200, 60)
+        createPlatform(2410, floorPosY - 150, 60)
     ];
 
     flagpole = {
@@ -151,6 +146,7 @@ function startNewGame() {
     isRight = false;
     isFalling = false;
     isPlummeting = false;
+    isDying = false;
     isOnPlatform = false;
     scrollPos = 0;
     fallSoundPlayed = false;
@@ -194,24 +190,18 @@ function resetPlayer() {
     isRight = false;
     isFalling = false;
     isPlummeting = false;
+    isDying = false;
     isOnPlatform = false;
     scrollPos = 0;
     fallSoundPlayed = false;
     flagpole.isReached = false;
 
-    // Enemies store their position in world coordinates relative to
-    // scrollPos at spawn time. Since scrollPos resets to 0 here, any
-    // existing enemies would suddenly sit far outside the now-reset
-    // viewport and get pruned as "off-screen" - so clear them here and
-    // let fresh ones spawn naturally from the edges again.
     enemies = [];
     enemySpawnTimer = 0;
 }
 
 // --------------------------------------------------
 // RESET AFTER LOSING LIFE
-// Identical to resetPlayer() - kept as its own named function
-// since it reads more clearly at the call site in loseLife().
 // --------------------------------------------------
 
 function resetAfterLifeLost() {
@@ -513,8 +503,6 @@ function drawCollectableStar(x, y) {
 
 // --------------------------------------------------
 // PLATFORM FACTORY
-// A simple factory function: each call returns a brand new
-// platform object built from the arguments given to it.
 // --------------------------------------------------
 
 const createPlatform = (x, y, length) => ({ x, y, length });
@@ -571,13 +559,7 @@ function drawFlagpole() {
 }
 
 // --------------------------------------------------
-// ENEMIES (turtles)
-// Built with a constructor function so each turtle is its own
-// object carrying its own position, direction and speed, with
-// shared behaviour (update/draw/off-screen check) on the
-// prototype. Turtles spawn from the left or right edge of the
-// visible screen, walk straight in, turn back at canyon edges
-// instead of falling in, and despawn once well off-screen.
+// ENEMIES
 // --------------------------------------------------
 
 function Turtle(xPos, direction) {
@@ -723,20 +705,17 @@ function drawGameChar() {
 
 // --------------------------------------------------
 // CHARACTER SHAPE
-// The character's body, assuming the caller has already set up
-// the translate/scale for where and how big to draw it. Shared
-// between normal gameplay rendering (drawGameChar) and the big
-// standalone portrait on the level-complete screen.
 // --------------------------------------------------
 
 function drawCharacterShape(stepOffsetL, stepOffsetR, facingRight) {
+
     // SHOES
 
     fill(95, 60, 35);
     rect(-10 + stepOffsetL * 0.3, -6, 8, 6);
     rect(2 + stepOffsetR * 0.3, -6, 8, 6);
 
-    // LEGS / SHORTS (red)
+    // LEGS / SHORTS
 
     fill(210, 40, 30);
     rect(-9, -18, 18, 12);
@@ -744,7 +723,7 @@ function drawCharacterShape(stepOffsetL, stepOffsetR, facingRight) {
     fill(180, 28, 20);
     rect(-9, -9, 18, 3);
 
-    // TORSO (red shirt with a simple chest panel)
+    // TORSO
 
     fill(228, 55, 35);
     rect(-11, -34, 22, 16);
@@ -780,7 +759,7 @@ function drawCharacterShape(stepOffsetL, stepOffsetR, facingRight) {
     rect(-14, -21, 5, 4);
     rect(9, -21, 5, 4);
 
-    // HEAD (big, chibi proportions)
+    // HEAD
 
     fill(250, 190, 130);
     rect(-12, -58, 24, 24);
@@ -799,11 +778,6 @@ function drawCharacterShape(stepOffsetL, stepOffsetR, facingRight) {
     fill(25, 20, 15);
     rect(-5, -47, 4, 5);
     rect(4, -47, 4, 5);
-
-    // MOUTH
-
-    fill(190, 100, 70);
-    rect(-3, -40, 5, 2);
 }
 
 // --------------------------------------------------
@@ -815,6 +789,17 @@ function updateGameChar() {
 
     if (isPlummeting) {
         gameCharVelocityY += 1;
+        gameCharY += gameCharVelocityY;
+        return;
+    }
+
+    if (isDying) {
+        // Bounces up first (negative velocity set by startDeathBounce()),
+        // then normal gravity pulls it back down and off the bottom of
+        // the screen. No platform/canyon/star/enemy checks run while
+        // this plays out - draw()'s "gameCharY > height + 100" check
+        // will call loseLife() once it's fallen far enough.
+        gameCharVelocityY += 0.7;
         gameCharY += gameCharVelocityY;
         return;
     }
@@ -846,11 +831,11 @@ function updateGameChar() {
 
 function moveGameChar() {
     if (isLeft) {
-        gameCharX -= 3;
+        gameCharX -= 5;
     }
 
     if (isRight) {
-        gameCharX += 3;
+        gameCharX += 5;
     }
 
     const leftBoundary = width * 0.25;
@@ -891,8 +876,8 @@ function applyGravity() {
 // --------------------------------------------------
 
 function jump() {
-    if (!isFalling && !isPlummeting) {
-        gameCharVelocityY = -16;
+    if (!isFalling && !isPlummeting && !isDying) {
+        gameCharVelocityY = -13;
         isFalling = true;
 
         if (jumpSound && jumpSound.isLoaded()) {
@@ -986,6 +971,11 @@ function checkFlagpole() {
 
 // --------------------------------------------------
 // CHECK ENEMY COLLISION
+// When the character touches an enemy, it doesn't lose the life
+// immediately - it bounces upward first, then falls back down and
+// off the bottom of the screen (see updateGameChar()'s isDying
+// branch), at which point the existing off-screen check in draw()
+// calls loseLife() and the game resets/ends as normal.
 // --------------------------------------------------
 
 function checkEnemyCollision() {
@@ -1011,10 +1001,26 @@ function checkEnemyCollision() {
                 suppressMusicForGameOver = false;
             }
 
-            loseLife();
+            startDeathBounce();
             return;
         }
     }
+}
+
+// --------------------------------------------------
+// DEATH BOUNCE
+// --------------------------------------------------
+
+function startDeathBounce() {
+    if (isDying) {
+        return;
+    }
+
+    isDying = true;
+    isFalling = true;
+    isLeft = false;
+    isRight = false;
+    gameCharVelocityY = -12;
 }
 
 // --------------------------------------------------
@@ -1041,6 +1047,7 @@ function loseLife() {
     } else {
         gameOver = true;
         isPlummeting = false;
+        isDying = false;
         isFalling = false;
         stopBackgroundMusic();
 
@@ -1137,9 +1144,6 @@ function drawEndMessage() {
 
 // --------------------------------------------------
 // LEVEL COMPLETE SCREEN
-// Full black background, "LEVEL COMPLETE" in the same font as
-// the HUD, and a big standalone portrait of the game character
-// underneath.
 // --------------------------------------------------
 
 function drawLevelCompleteScreen() {
@@ -1151,7 +1155,7 @@ function drawLevelCompleteScreen() {
     textStyle(BOLD);
     textAlign(CENTER, CENTER);
     textSize(54);
-    text("LEVEL 1 COMPLETE", width / 2, height / 2 - 140);
+    text("LEVEL COMPLETE", width / 2, height / 2 - 140);
 
     push();
     translate(width / 2, height / 2 + 60);
@@ -1173,11 +1177,7 @@ function drawLevelCompleteScreen() {
 // --------------------------------------------------
 
 function keyPressed() {
-    // A key press is a valid user gesture, so unlock audio here. This
-    // applies to every key - left arrow, right arrow, jump, all of
-    // them - and attemptStartBackgroundMusic() is also called directly
-    // below so the music starts immediately rather than waiting for
-    // the next frame.
+
     if (typeof userStartAudio === "function") {
         userStartAudio();
     }
