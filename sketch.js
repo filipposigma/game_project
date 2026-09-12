@@ -22,11 +22,15 @@ var apples;
 var platforms;
 var flagpole;
 
+var enemies;
+var enemySpawnTimer;
+
 var jumpSound;
 var backgroundMusic;
 var fallSound;
 var fallSoundPlayed;
 var levelCompleteSound;
+var gameOverSound;
 var itemCollectSound;
 
 var gameTime;
@@ -43,6 +47,7 @@ function preload() {
     backgroundMusic = loadSound("assets/background-music.mp3", function() {}, function() { backgroundMusic = null; });
     levelCompleteSound = loadSound("assets/level_complete.mp3", function() {}, function() { levelCompleteSound = null; });
     itemCollectSound = loadSound("assets/item_collect.mp3", function() {}, function() { itemCollectSound = null; });
+    gameOverSound = loadSound("assets/game_over.mp3", function() { gameOverSound.onended(onGameOverSoundEnded); }, function() { gameOverSound = null; });
 }
 
 // --------------------------------------------------
@@ -107,15 +112,17 @@ function initialiseLevel() {
 
     platforms = [
         createPlatform(450, floorPos_y - 100, 50),
-        createPlatform(990, floorPos_y - 120, 150),
-        createPlatform(1500, floorPos_y - 90, 175),
-        createPlatform(2070, floorPos_y - 145, 180)
+        createPlatform(990, floorPos_y - 120, 70),
+        createPlatform(1500, floorPos_y - 90, 50),
+        createPlatform(2070, floorPos_y - 145, 70)
     ];
 
     flagpole = {
         x_pos: 2600,
         isReached: false
     };
+
+    enemies = [];
 }
 
 // --------------------------------------------------
@@ -141,6 +148,9 @@ function startNewGame() {
         apples[i].isFound = false;
     }
 
+    enemies = [];
+    enemySpawnTimer = 0;
+
     resetPlayer();
 
     if (levelCompleteSound && levelCompleteSound.isPlaying()) {
@@ -149,6 +159,10 @@ function startNewGame() {
 
     if (itemCollectSound && itemCollectSound.isPlaying()) {
         itemCollectSound.stop();
+    }
+
+    if (gameOverSound && gameOverSound.isPlaying()) {
+        gameOverSound.stop();
     }
 
     startBackgroundMusic();
@@ -219,6 +233,16 @@ function onFallSoundEnded() {
 }
 
 // --------------------------------------------------
+// GAME OVER SOUND FINISHED
+// --------------------------------------------------
+
+function onGameOverSoundEnded() {
+    if (!gameOver && !levelComplete) {
+        startBackgroundMusic();
+    }
+}
+
+// --------------------------------------------------
 // START MUSIC 
 // --------------------------------------------------
 
@@ -228,6 +252,10 @@ function attemptStartBackgroundMusic() {
     }
 
     if (fallSound && fallSound.isPlaying()) {
+        return;
+    }
+
+    if (gameOverSound && gameOverSound.isPlaying()) {
         return;
     }
 
@@ -262,6 +290,7 @@ function draw() {
     drawPlatforms();
     drawApples();
     drawFlagpole();
+    drawEnemies();
     drawGameChar();
     pop();
 
@@ -537,6 +566,104 @@ function drawFlagpole() {
 }
 
 // --------------------------------------------------
+// ENEMIES (turtles)
+// Spawn from the left or right edge of the visible screen
+// at a steady interval, walk straight across, and despawn
+// once they've gone well past the opposite edge.
+// --------------------------------------------------
+
+function spawnEnemy() {
+    var spawnFromLeft = random() < 0.5;
+    var screenEdgeX = spawnFromLeft ? -30 : width + 30;
+    var direction = spawnFromLeft ? 1 : -1;
+
+    enemies.push({
+        x_pos: screenEdgeX - scrollPos,
+        direction: direction,
+        speed: 1.3
+    });
+}
+
+function updateEnemies() {
+    enemySpawnTimer++;
+
+    if (enemySpawnTimer > 180) {
+        spawnEnemy();
+        enemySpawnTimer = 0;
+    }
+
+    for (var i = enemies.length - 1; i >= 0; i--) {
+        var enemy = enemies[i];
+        var nextX = enemy.x_pos + enemy.direction * enemy.speed;
+
+        if (isOverCanyon(nextX)) {
+            enemy.direction *= -1;
+        } else {
+            enemy.x_pos = nextX;
+        }
+
+        var screenX = enemy.x_pos + scrollPos;
+
+        if (screenX < -100 || screenX > width + 100) {
+            enemies.splice(i, 1);
+        }
+    }
+}
+
+function isOverCanyon(x) {
+    for (var i = 0; i < canyons.length; i++) {
+        var canyon = canyons[i];
+
+        if (x > canyon.x_pos && x < canyon.x_pos + canyon.width) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function drawEnemies() {
+    for (var i = 0; i < enemies.length; i++) {
+        drawTurtle(enemies[i].x_pos, enemies[i].direction);
+    }
+}
+
+function drawTurtle(x, direction) {
+    push();
+
+    translate(x, floorPos_y);
+    scale(direction, 1);
+    noStroke();
+
+    // feet
+    fill(70, 140, 40);
+    rect(-9, -6, 6, 6);
+    rect(3, -6, 6, 6);
+
+    // shell
+    fill(40, 110, 40);
+    rect(-11, -24, 22, 16);
+
+    fill(60, 150, 60);
+    rect(-9, -22, 18, 6);
+
+    // shell pattern
+    fill(30, 90, 30);
+    rect(-6, -18, 4, 4);
+    rect(2, -18, 4, 4);
+
+    // head
+    fill(120, 200, 90);
+    rect(6, -20, 9, 9);
+
+    // eye
+    fill(10, 10, 10);
+    rect(11, -18, 2, 2);
+
+    pop();
+}
+
+// --------------------------------------------------
 // GAME CHARACTER
 // --------------------------------------------------
 
@@ -659,6 +786,8 @@ function drawGameChar() {
 // --------------------------------------------------
 
 function updateGameChar() {
+    updateEnemies();
+
     if (isPlummeting) {
         gameChar_velocity_y += 1;
         gameChar_y += gameChar_velocity_y;
@@ -685,6 +814,7 @@ function updateGameChar() {
     checkCanyons();
     checkApples();
     checkFlagpole();
+    checkEnemyCollision();
 }
 
 // --------------------------------------------------
@@ -824,6 +954,33 @@ function checkFlagpole() {
         if (levelCompleteSound && levelCompleteSound.isLoaded()) {
             levelCompleteSound.stop();
             levelCompleteSound.play();
+        }
+    }
+}
+
+// --------------------------------------------------
+// CHECK ENEMY COLLISION
+// --------------------------------------------------
+
+function checkEnemyCollision() {
+    if (gameChar_y < floorPos_y - 10) {
+        return;
+    }
+
+    for (var i = 0; i < enemies.length; i++) {
+        var enemy = enemies[i];
+        var distance = abs(gameChar_world_x - enemy.x_pos);
+
+        if (distance < 18) {
+            stopBackgroundMusic();
+
+            if (gameOverSound && gameOverSound.isLoaded()) {
+                gameOverSound.stop();
+                gameOverSound.play();
+            }
+
+            loseLife();
+            return;
         }
     }
 }
