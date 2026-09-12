@@ -340,21 +340,11 @@ export function drawCharacterShape(stepOffsetL, stepOffsetR, facingRight) {
     fill(228, 55, 35);
     rect(-11, -34, 22, 16);
 
-    fill(246, 241, 226);
-    rect(-6, -32, 12, 11);
-
     push();
 
     if (!facingRight) {
         scale(-1, 1);
     }
-
-    fill(20, 20, 20);
-    textFont("Courier New");
-    textStyle(BOLD);
-    textAlign(CENTER, CENTER);
-    textSize(8);
-    text("F", 0, -26);
 
     pop();
 
