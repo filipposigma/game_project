@@ -2,8 +2,8 @@
 // MAIN
 // --------------------------------------------------
 
-import { world } from './world.js';
-import { game, resetGameState, updateTimer } from './game.js';
+import {world} from './world.js';
+import {game, resetGameState, updateTimer } from './game.js';
 import {
     preloadSounds,
     startBackgroundMusic,
@@ -23,7 +23,7 @@ import {
     drawPlatforms,
     drawFlagpole
 } from './level.js';
-import { drawEnemies } from './enemies.js';
+import {drawEnemies} from './enemies.js';
 import {
     player,
     resetPlayer,
@@ -32,7 +32,7 @@ import {
     updateGameChar,
     drawGameChar
 } from './player.js';
-import { drawHud, drawEndMessage } from './ui.js';
+import {drawHud, drawEndMessage} from './ui.js';
 
 // --------------------------------------------------
 // PRELOAD
