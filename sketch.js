@@ -57,11 +57,6 @@ function setup() {
     initialiseLevel();
     startNewGame();
 
-    // Browsers block audio until the very first user interaction
-    // (click, tap, or key press) anywhere on the page. userStartAudio()
-    // with no arguments listens for that first interaction itself, so
-    // the music starts as soon as that happens - not tied to any
-    // specific key like jump.
     if (typeof userStartAudio === "function") {
         userStartAudio().then(function() {
             startBackgroundMusic();
@@ -224,12 +219,8 @@ function onFallSoundEnded() {
 }
 
 // --------------------------------------------------
-// TRY TO START MUSIC (checked every frame)
+// START MUSIC 
 // --------------------------------------------------
-// Starting music only from inside keyPressed() can miss the moment
-// the music finishes loading if a key was pressed slightly too early.
-// Checking every frame means the music starts the instant every
-// condition is true, no matter which key unlocked the audio.
 
 function attemptStartBackgroundMusic() {
     if (gameOver || levelComplete || isPlummeting) {
@@ -547,10 +538,6 @@ function drawFlagpole() {
 
 // --------------------------------------------------
 // GAME CHARACTER
-// Chibi-style proportions (big head, compact body) similar
-// to classic platformers like Super Mario / Wonder Boy, sized
-// to sit comfortably against this game's platforms/canyons
-// (~58px tall including hair, feet anchored at local y = 0).
 // --------------------------------------------------
 
 function drawGameChar() {
@@ -889,7 +876,7 @@ function drawHud() {
 
     textAlign(LEFT, TOP);
     textSize(28);
-    text("APPLES", 55, 24);
+    text("STARS", 55, 24);
 
     textSize(25);
     text(formatApples(game_score), 55, 52);
@@ -966,11 +953,7 @@ function drawEndMessage() {
 // --------------------------------------------------
 
 function keyPressed() {
-    // A key press is a valid user gesture, so unlock audio here. This
-    // applies to every key - left arrow, right arrow, jump, all of
-    // them - and attemptStartBackgroundMusic() is also called directly
-    // below so the music starts immediately rather than waiting for
-    // the next frame.
+ 
     if (typeof userStartAudio === "function") {
         userStartAudio();
     }
