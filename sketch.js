@@ -916,7 +916,11 @@ function checkCanyons() {
                 if (!fallSoundPlayed && fallSound && fallSound.isLoaded()) {
                     fallSoundPlayed = true;
                     suppressMusicForFall = true;
-                    fallSound.stop();
+
+                    if (fallSound.isPlaying()) {
+                        fallSound.stop();
+                    }
+
                     fallSound.play();
                 } else {
                     suppressMusicForFall = false;
@@ -991,7 +995,11 @@ function checkEnemyCollision() {
 
             if (gameOverSound && gameOverSound.isLoaded()) {
                 suppressMusicForGameOver = true;
-                gameOverSound.stop();
+
+                if (gameOverSound.isPlaying()) {
+                    gameOverSound.stop();
+                }
+
                 gameOverSound.play();
             } else {
                 suppressMusicForGameOver = false;
