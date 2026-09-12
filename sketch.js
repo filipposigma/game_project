@@ -575,17 +575,14 @@ function drawGameChar() {
         }
     }
 
-    // --------------------------------------------------
+
     // SHOES
-    // --------------------------------------------------
 
     fill(95, 60, 35);
     rect(-10 + stepOffsetL * 0.3, -6, 8, 6);
     rect(2 + stepOffsetR * 0.3, -6, 8, 6);
 
-    // --------------------------------------------------
     // LEGS / SHORTS (red)
-    // --------------------------------------------------
 
     fill(210, 40, 30);
     rect(-9, -18, 18, 12);
@@ -593,9 +590,7 @@ function drawGameChar() {
     fill(180, 28, 20);
     rect(-9, -9, 18, 3);
 
-    // --------------------------------------------------
     // TORSO (red shirt with a simple chest panel)
-    // --------------------------------------------------
 
     fill(228, 55, 35);
     rect(-11, -34, 22, 16);
@@ -603,9 +598,25 @@ function drawGameChar() {
     fill(246, 241, 226);
     rect(-6, -32, 12, 11);
 
-    // --------------------------------------------------
+    push();
+
+    if (!facingRight) {
+        scale(-1, 1);
+    }
+
+    fill(20, 20, 20);
+    textFont("Courier New");
+    textStyle(BOLD);
+    textAlign(CENTER, CENTER);
+    textSize(8);
+    text("F", 0, -26);
+
+    pop();
+
+    textAlign(LEFT, BASELINE);
+    textStyle(NORMAL);
+
     // ARMS
-    // --------------------------------------------------
 
     fill(218, 48, 30);
     rect(-14, -32, 5, 13);
@@ -615,9 +626,7 @@ function drawGameChar() {
     rect(-14, -21, 5, 4);
     rect(9, -21, 5, 4);
 
-    // --------------------------------------------------
     // HEAD (big, chibi proportions)
-    // --------------------------------------------------
 
     fill(250, 190, 130);
     rect(-12, -58, 24, 24);
@@ -625,25 +634,19 @@ function drawGameChar() {
     fill(232, 168, 110);
     rect(-12, -37, 24, 3);
 
-    // --------------------------------------------------
     // HAIR / CAP
-    // --------------------------------------------------
 
     fill(60, 40, 25);
     rect(-13, -59, 26, 8);
     rect(-14, -53, 6, 5);
 
-    // --------------------------------------------------
     // EYES
-    // --------------------------------------------------
 
     fill(25, 20, 15);
     rect(-5, -47, 4, 5);
     rect(4, -47, 4, 5);
 
-    // --------------------------------------------------
     // MOUTH
-    // --------------------------------------------------
 
     fill(190, 100, 70);
     rect(-3, -40, 5, 2);
@@ -846,8 +849,7 @@ function loseLife() {
 
     if (lives > 0) {
         resetAfterLifeLost();
-        // attemptStartBackgroundMusic() (called every frame) will restart
-        // the music automatically once the fall sound finishes playing.
+
     } else {
         gameOver = true;
         isPlummeting = false;
