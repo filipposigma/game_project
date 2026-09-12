@@ -24,6 +24,8 @@ var flagpole;
 
 var enemies;
 var enemySpawnTimer;
+var suppressMusicForFall;
+var suppressMusicForGameOver;
 
 var jumpSound;
 var backgroundMusic;
@@ -46,7 +48,7 @@ function preload() {
     fallSound = loadSound("assets/fall.wav", function() { fallSound.onended(onFallSoundEnded); }, function() { fallSound = null; });
     backgroundMusic = loadSound("assets/background-music.mp3", function() {}, function() { backgroundMusic = null; });
     levelCompleteSound = loadSound("assets/level_complete.mp3", function() {}, function() { levelCompleteSound = null; });
-    itemCollectSound = loadSound("assets/item_collect.mp3", function() {}, function() { itemCollectSound = null; });
+    itemCollectSound = loadSound("assets/item_collect.mp3", function() { itemCollectSound.setVolume(2); }, function() { itemCollectSound = null; });
     gameOverSound = loadSound("assets/game_over.mp3", function() { gameOverSound.onended(onGameOverSoundEnded); }, function() { gameOverSound = null; });
 }
 
@@ -150,6 +152,8 @@ function startNewGame() {
 
     enemies = [];
     enemySpawnTimer = 0;
+    suppressMusicForFall = false;
+    suppressMusicForGameOver = false;
 
     resetPlayer();
 
@@ -227,6 +231,8 @@ function stopBackgroundMusic() {
 // --------------------------------------------------
 
 function onFallSoundEnded() {
+    suppressMusicForFall = false;
+
     if (!gameOver && !levelComplete) {
         startBackgroundMusic();
     }
@@ -237,6 +243,8 @@ function onFallSoundEnded() {
 // --------------------------------------------------
 
 function onGameOverSoundEnded() {
+    suppressMusicForGameOver = false;
+
     if (!gameOver && !levelComplete) {
         startBackgroundMusic();
     }
@@ -248,6 +256,10 @@ function onGameOverSoundEnded() {
 
 function attemptStartBackgroundMusic() {
     if (gameOver || levelComplete || isPlummeting) {
+        return;
+    }
+
+    if (suppressMusicForFall || suppressMusicForGameOver) {
         return;
     }
 
@@ -632,28 +644,28 @@ function drawTurtle(x, direction) {
     push();
 
     translate(x, floorPos_y);
-    scale(direction, 1);
+    scale(direction * 1.4, 1.4);
     noStroke();
 
     // feet
-    fill(70, 140, 40);
+    fill(90, 55, 25);
     rect(-9, -6, 6, 6);
     rect(3, -6, 6, 6);
 
     // shell
-    fill(40, 110, 40);
+    fill(215, 100, 30);
     rect(-11, -24, 22, 16);
 
-    fill(60, 150, 60);
+    fill(240, 140, 50);
     rect(-9, -22, 18, 6);
 
     // shell pattern
-    fill(30, 90, 30);
+    fill(160, 70, 20);
     rect(-6, -18, 4, 4);
     rect(2, -18, 4, 4);
 
     // head
-    fill(120, 200, 90);
+    fill(250, 175, 90);
     rect(6, -20, 9, 9);
 
     // eye
@@ -903,8 +915,11 @@ function checkCanyons() {
 
                 if (!fallSoundPlayed && fallSound && fallSound.isLoaded()) {
                     fallSoundPlayed = true;
+                    suppressMusicForFall = true;
                     fallSound.stop();
                     fallSound.play();
+                } else {
+                    suppressMusicForFall = false;
                 }
             }
 
@@ -971,12 +986,15 @@ function checkEnemyCollision() {
         var enemy = enemies[i];
         var distance = abs(gameChar_world_x - enemy.x_pos);
 
-        if (distance < 18) {
+        if (distance < 24) {
             stopBackgroundMusic();
 
             if (gameOverSound && gameOverSound.isLoaded()) {
+                suppressMusicForGameOver = true;
                 gameOverSound.stop();
                 gameOverSound.play();
+            } else {
+                suppressMusicForGameOver = false;
             }
 
             loseLife();
