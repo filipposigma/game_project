@@ -109,14 +109,21 @@ function initialiseLevel() {
         {x_pos: 1065, y_pos: floorPos_y - 165, isFound: false},
         {x_pos: 1560, y_pos: floorPos_y - 130, isFound: false},
         {x_pos: 2140, y_pos: floorPos_y - 190, isFound: false},
-        {x_pos: 2390, y_pos: floorPos_y - 25, isFound: false}
+        {x_pos: 2390, y_pos: floorPos_y - 25, isFound: false},
+        {x_pos: 2360, y_pos: floorPos_y - 125, isFound: false},
+        {x_pos: 2520, y_pos: floorPos_y - 225, isFound: false},
+        {x_pos: 2520, y_pos: floorPos_y - 340, isFound: false}
     ];
 
     platforms = [
         createPlatform(450, floorPos_y - 100, 50),
         createPlatform(990, floorPos_y - 120, 70),
         createPlatform(1500, floorPos_y - 90, 50),
-        createPlatform(2070, floorPos_y - 145, 70)
+        createPlatform(2070, floorPos_y - 145, 70),
+        createPlatform(2250, floorPos_y - 50, 60),
+        createPlatform(2330, floorPos_y - 100, 60),
+        createPlatform(2410, floorPos_y - 150, 60),
+        createPlatform(2490, floorPos_y - 200, 60)
     ];
 
     flagpole = {
