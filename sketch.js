@@ -1,42 +1,42 @@
-var floorPos_y;
-var gameChar_x;
-var gameChar_y;
-var gameChar_world_x;
-var gameChar_velocity_y;
-var scrollPos;
-var game_score;
-var lives;
-var gameOver;
-var levelComplete;
-var isLeft;
-var isRight;
-var isFalling;
-var isPlummeting;
-var isOnPlatform;
+let floorPosY;
+let gameCharX;
+let gameCharY;
+let gameCharWorldX;
+let gameCharVelocityY;
+let scrollPos;
+let gameScore;
+let lives;
+let gameOver;
+let levelComplete;
+let isLeft;
+let isRight;
+let isFalling;
+let isPlummeting;
+let isOnPlatform;
 
-var trees_x;
-var clouds;
-var mountains;
-var canyons;
-var apples;
-var platforms;
-var flagpole;
+let treesX;
+let clouds;
+let mountains;
+let canyons;
+let stars;
+let platforms;
+let flagpole;
 
-var enemies;
-var enemySpawnTimer;
-var suppressMusicForFall;
-var suppressMusicForGameOver;
+let enemies;
+let enemySpawnTimer;
+let suppressMusicForFall;
+let suppressMusicForGameOver;
 
-var jumpSound;
-var backgroundMusic;
-var fallSound;
-var fallSoundPlayed;
-var levelCompleteSound;
-var gameOverSound;
-var itemCollectSound;
+let jumpSound;
+let backgroundMusic;
+let fallSound;
+let fallSoundPlayed;
+let levelCompleteSound;
+let gameOverSound;
+let itemCollectSound;
 
-var gameTime;
-var gameStartTime;
+let gameTime;
+let gameStartTime;
 
 // --------------------------------------------------
 // PRELOAD
@@ -44,12 +44,12 @@ var gameStartTime;
 
 function preload() {
     soundFormats("mp3", "wav");
-    jumpSound = loadSound("assets/jump.wav", function() {}, function() { jumpSound = null; });
-    fallSound = loadSound("assets/fall.wav", function() { fallSound.onended(onFallSoundEnded); }, function() { fallSound = null; });
-    backgroundMusic = loadSound("assets/background-music.mp3", function() {}, function() { backgroundMusic = null; });
-    levelCompleteSound = loadSound("assets/level_complete.mp3", function() {}, function() { levelCompleteSound = null; });
-    itemCollectSound = loadSound("assets/item_collect.mp3", function() { itemCollectSound.setVolume(2); }, function() { itemCollectSound = null; });
-    gameOverSound = loadSound("assets/game_over.mp3", function() { gameOverSound.onended(onGameOverSoundEnded); }, function() { gameOverSound = null; });
+    jumpSound = loadSound("assets/jump.wav", () => {}, () => { jumpSound = null; });
+    fallSound = loadSound("assets/fall.wav", () => { fallSound.onended(onFallSoundEnded); }, () => { fallSound = null; });
+    backgroundMusic = loadSound("assets/background-music.mp3", () => {}, () => { backgroundMusic = null; });
+    levelCompleteSound = loadSound("assets/level_complete.mp3", () => {}, () => { levelCompleteSound = null; });
+    itemCollectSound = loadSound("assets/item_collect.mp3", () => { itemCollectSound.setVolume(2); }, () => { itemCollectSound = null; });
+    gameOverSound = loadSound("assets/game_over.mp3", () => { gameOverSound.onended(onGameOverSoundEnded); }, () => { gameOverSound = null; });
 }
 
 // --------------------------------------------------
@@ -58,14 +58,18 @@ function preload() {
 
 function setup() {
     createCanvas(1024, 576);
-    floorPos_y = floor(height * 0.87);
+    floorPosY = floor(height * 0.87);
     textFont("Courier New");
     noSmooth();
     initialiseLevel();
     startNewGame();
 
+    // Browsers block audio until the very first user interaction
+    // (click, tap, or key press) anywhere on the page. userStartAudio()
+    // with no arguments listens for that first interaction itself, so
+    // the music starts as soon as that happens.
     if (typeof userStartAudio === "function") {
-        userStartAudio().then(function() {
+        userStartAudio().then(() => {
             startBackgroundMusic();
         });
     }
@@ -76,58 +80,58 @@ function setup() {
 // --------------------------------------------------
 
 function initialiseLevel() {
-    trees_x = [-700, -300, 150, 650, 1100, 1600, 2150, 2700];
+    treesX = [-700, -300, 150, 650, 1100, 1600, 2150, 2700];
 
     clouds = [
-        {x_pos: -600, y_pos: 90, size: 0.6},
-        {x_pos: -100, y_pos: 140, size: 0.8},
-        {x_pos: 420, y_pos: 70, size: 0.5},
-        {x_pos: 950, y_pos: 120, size: 0.7},
-        {x_pos: 1480, y_pos: 65, size: 0.6},
-        {x_pos: 2050, y_pos: 135, size: 0.8}
+        { xPos: -600, yPos: 90, size: 0.6 },
+        { xPos: -100, yPos: 140, size: 0.8 },
+        { xPos: 420, yPos: 70, size: 0.5 },
+        { xPos: 950, yPos: 120, size: 0.7 },
+        { xPos: 1480, yPos: 65, size: 0.6 },
+        { xPos: 2050, yPos: 135, size: 0.8 }
     ];
 
     canyons = [
-        {x_pos: 260, width: 100},
-        {x_pos: 800, width: 100},
-        {x_pos: 1340, width: 100},
-        {x_pos: 1900, width: 100}
+        { xPos: 260, width: 90 },
+        { xPos: 800, width: 90 },
+        { xPos: 1340, width: 90 },
+        { xPos: 1900, width: 90 }
     ];
 
     mountains = [
-        {x_pos: -500, height: 250},
-        {x_pos: 430, height: 220},
-        {x_pos: 960, height: 285},
-        {x_pos: 1500, height: 240},
-        {x_pos: 2100, height: 275}
+        { xPos: -500, height: 250 },
+        { xPos: 430, height: 220 },
+        { xPos: 960, height: 285 },
+        { xPos: 1500, height: 240 },
+        { xPos: 2100, height: 275 }
     ];
 
-    apples = [
-        {x_pos: 100, y_pos: floorPos_y - 25, isFound: false},
-        {x_pos: 470, y_pos: floorPos_y - 145, isFound: false},
-        {x_pos: 735, y_pos: floorPos_y - 25, isFound: false},
-        {x_pos: 1065, y_pos: floorPos_y - 165, isFound: false},
-        {x_pos: 1560, y_pos: floorPos_y - 130, isFound: false},
-        {x_pos: 2140, y_pos: floorPos_y - 190, isFound: false},
-        {x_pos: 2390, y_pos: floorPos_y - 25, isFound: false},
-        {x_pos: 2360, y_pos: floorPos_y - 125, isFound: false},
-        {x_pos: 2520, y_pos: floorPos_y - 225, isFound: false},
-        {x_pos: 2520, y_pos: floorPos_y - 340, isFound: false}
+    stars = [
+        { xPos: 100, yPos: floorPosY - 25, isFound: false },
+        { xPos: 470, yPos: floorPosY - 145, isFound: false },
+        { xPos: 735, yPos: floorPosY - 25, isFound: false },
+        { xPos: 1065, yPos: floorPosY - 165, isFound: false },
+        { xPos: 1560, yPos: floorPosY - 130, isFound: false },
+        { xPos: 2140, yPos: floorPosY - 190, isFound: false },
+        { xPos: 2390, yPos: floorPosY - 25, isFound: false },
+        { xPos: 2360, yPos: floorPosY - 125, isFound: false },
+        { xPos: 2520, yPos: floorPosY - 225, isFound: false },
+        { xPos: 2520, yPos: floorPosY - 340, isFound: false }
     ];
 
     platforms = [
-        createPlatform(450, floorPos_y - 100, 50),
-        createPlatform(990, floorPos_y - 120, 70),
-        createPlatform(1500, floorPos_y - 90, 50),
-        createPlatform(2070, floorPos_y - 145, 70),
-        createPlatform(2250, floorPos_y - 50, 60),
-        createPlatform(2330, floorPos_y - 100, 60),
-        createPlatform(2410, floorPos_y - 150, 60),
-        createPlatform(2490, floorPos_y - 200, 60)
+        createPlatform(450, floorPosY - 100, 50),
+        createPlatform(990, floorPosY - 120, 70),
+        createPlatform(1500, floorPosY - 90, 50),
+        createPlatform(2070, floorPosY - 145, 70),
+        createPlatform(2250, floorPosY - 50, 60),
+        createPlatform(2330, floorPosY - 100, 60),
+        createPlatform(2410, floorPosY - 150, 60),
+        createPlatform(2490, floorPosY - 200, 60)
     ];
 
     flagpole = {
-        x_pos: 2600,
+        xPos: 2600,
         isReached: false
     };
 
@@ -139,7 +143,7 @@ function initialiseLevel() {
 // --------------------------------------------------
 
 function startNewGame() {
-    game_score = 0;
+    gameScore = 0;
     lives = 3;
     gameOver = false;
     levelComplete = false;
@@ -153,12 +157,10 @@ function startNewGame() {
     gameTime = 0;
     gameStartTime = millis();
 
-    for (var i = 0; i < apples.length; i++) {
-        apples[i].isFound = false;
+    for (const star of stars) {
+        star.isFound = false;
     }
 
-    enemies = [];
-    enemySpawnTimer = 0;
     suppressMusicForFall = false;
     suppressMusicForGameOver = false;
 
@@ -184,10 +186,10 @@ function startNewGame() {
 // --------------------------------------------------
 
 function resetPlayer() {
-    gameChar_x = width / 2;
-    gameChar_y = floorPos_y;
-    gameChar_world_x = gameChar_x;
-    gameChar_velocity_y = 0;
+    gameCharX = width / 2;
+    gameCharY = floorPosY;
+    gameCharWorldX = gameCharX;
+    gameCharVelocityY = 0;
     isLeft = false;
     isRight = false;
     isFalling = false;
@@ -196,25 +198,24 @@ function resetPlayer() {
     scrollPos = 0;
     fallSoundPlayed = false;
     flagpole.isReached = false;
+
+    // Enemies store their position in world coordinates relative to
+    // scrollPos at spawn time. Since scrollPos resets to 0 here, any
+    // existing enemies would suddenly sit far outside the now-reset
+    // viewport and get pruned as "off-screen" - so clear them here and
+    // let fresh ones spawn naturally from the edges again.
+    enemies = [];
+    enemySpawnTimer = 0;
 }
 
 // --------------------------------------------------
 // RESET AFTER LOSING LIFE
+// Identical to resetPlayer() - kept as its own named function
+// since it reads more clearly at the call site in loseLife().
 // --------------------------------------------------
 
 function resetAfterLifeLost() {
-    gameChar_x = width / 2;
-    gameChar_y = floorPos_y;
-    gameChar_world_x = gameChar_x;
-    gameChar_velocity_y = 0;
-    isLeft = false;
-    isRight = false;
-    isFalling = false;
-    isPlummeting = false;
-    isOnPlatform = false;
-    scrollPos = 0;
-    fallSoundPlayed = false;
-    flagpole.isReached = false;
+    resetPlayer();
 }
 
 // --------------------------------------------------
@@ -258,7 +259,7 @@ function onGameOverSoundEnded() {
 }
 
 // --------------------------------------------------
-// START MUSIC 
+// TRY TO START MUSIC (checked every frame)
 // --------------------------------------------------
 
 function attemptStartBackgroundMusic() {
@@ -294,7 +295,7 @@ function draw() {
         updateGameChar();
         updateTimer();
 
-        if (gameChar_y > height + 100) {
+        if (gameCharY > height + 100) {
             loseLife();
         }
     }
@@ -307,7 +308,7 @@ function draw() {
     drawGround();
     drawCanyons();
     drawPlatforms();
-    drawApples();
+    drawStars();
     drawFlagpole();
     drawEnemies();
     drawGameChar();
@@ -333,32 +334,30 @@ function drawSky() {
 // --------------------------------------------------
 
 function drawTrees() {
-    for (var i = 0; i < trees_x.length; i++) {
-        var treeX = trees_x[i];
-
+    for (const treeX of treesX) {
         noStroke();
 
         fill(39, 128, 7);
-        rect(treeX - 45, floorPos_y - 85, 30, 30);
-        rect(treeX - 60, floorPos_y - 55, 45, 30);
-        rect(treeX + 30, floorPos_y - 70, 30, 45);
-        rect(treeX - 30, floorPos_y - 105, 60, 30);
+        rect(treeX - 45, floorPosY - 85, 30, 30);
+        rect(treeX - 60, floorPosY - 55, 45, 30);
+        rect(treeX + 30, floorPosY - 70, 30, 45);
+        rect(treeX - 30, floorPosY - 105, 60, 30);
 
         fill(100, 205, 10);
-        rect(treeX - 30, floorPos_y - 95, 60, 30);
-        rect(treeX - 45, floorPos_y - 65, 90, 45);
-        rect(treeX - 60, floorPos_y - 25, 120, 30);
+        rect(treeX - 30, floorPosY - 95, 60, 30);
+        rect(treeX - 45, floorPosY - 65, 90, 45);
+        rect(treeX - 60, floorPosY - 25, 120, 30);
 
         fill(140, 225, 20);
-        rect(treeX - 30, floorPos_y - 95, 30, 20);
-        rect(treeX - 45, floorPos_y - 65, 35, 20);
-        rect(treeX + 15, floorPos_y - 35, 30, 15);
+        rect(treeX - 30, floorPosY - 95, 30, 20);
+        rect(treeX - 45, floorPosY - 65, 35, 20);
+        rect(treeX + 15, floorPosY - 35, 30, 15);
 
         fill(143, 78, 25);
-        rect(treeX - 18, floorPos_y - 5, 36, 30);
+        rect(treeX - 18, floorPosY - 5, 36, 30);
 
         fill(180, 92, 28);
-        rect(treeX - 12, floorPos_y - 5, 15, 30);
+        rect(treeX - 12, floorPosY - 5, 15, 30);
     }
 }
 
@@ -370,24 +369,24 @@ function drawGround() {
     noStroke();
 
     fill(211, 91, 12);
-    rect(-2000, floorPos_y, 6000, height - floorPos_y);
+    rect(-2000, floorPosY, 6000, height - floorPosY);
 
     fill(235, 117, 14);
-    rect(-2000, floorPos_y, 6000, 7);
+    rect(-2000, floorPosY, 6000, 7);
 
     fill(121, 54, 18);
 
-    for (var x = -1900; x < 4000; x += 90) {
-        rect(x, floorPos_y + 35, 18, 5);
-        rect(x + 40, floorPos_y + 75, 12, 4);
-        rect(x + 70, floorPos_y + 110, 20, 5);
+    for (let x = -1900; x < 4000; x += 90) {
+        rect(x, floorPosY + 35, 18, 5);
+        rect(x + 40, floorPosY + 75, 12, 4);
+        rect(x + 70, floorPosY + 110, 20, 5);
     }
 
     fill(145, 60, 16);
 
-    for (var j = -1800; j < 4000; j += 150) {
-        rect(j, floorPos_y + 55, 10, 5);
-        rect(j + 75, floorPos_y + 92, 15, 5);
+    for (let x = -1800; x < 4000; x += 150) {
+        rect(x, floorPosY + 55, 10, 5);
+        rect(x + 75, floorPosY + 92, 15, 5);
     }
 }
 
@@ -398,18 +397,17 @@ function drawGround() {
 function drawMountains() {
     noStroke();
 
-    for (var i = 0; i < mountains.length; i++) {
-        var mountain = mountains[i];
-        var mountainWidth = 260;
+    for (const mountain of mountains) {
+        const mountainWidth = 260;
 
         fill(111, 143, 134);
-        triangle(mountain.x_pos, floorPos_y, mountain.x_pos + mountainWidth / 2, floorPos_y - mountain.height, mountain.x_pos + mountainWidth, floorPos_y);
+        triangle(mountain.xPos, floorPosY, mountain.xPos + mountainWidth / 2, floorPosY - mountain.height, mountain.xPos + mountainWidth, floorPosY);
 
         fill(174, 198, 188);
-        triangle(mountain.x_pos + mountainWidth / 2, floorPos_y - mountain.height, mountain.x_pos + mountainWidth * 0.64, floorPos_y - mountain.height * 0.55, mountain.x_pos + mountainWidth, floorPos_y);
+        triangle(mountain.xPos + mountainWidth / 2, floorPosY - mountain.height, mountain.xPos + mountainWidth * 0.64, floorPosY - mountain.height * 0.55, mountain.xPos + mountainWidth, floorPosY);
 
         fill(91, 123, 116);
-        triangle(mountain.x_pos, floorPos_y, mountain.x_pos + mountainWidth / 2, floorPos_y - mountain.height, mountain.x_pos + mountainWidth * 0.38, floorPos_y);
+        triangle(mountain.xPos, floorPosY, mountain.xPos + mountainWidth / 2, floorPosY - mountain.height, mountain.xPos + mountainWidth * 0.38, floorPosY);
     }
 }
 
@@ -420,11 +418,9 @@ function drawMountains() {
 function drawClouds() {
     noStroke();
 
-    for (var i = 0; i < clouds.length; i++) {
-        var cloud = clouds[i];
-
+    for (const cloud of clouds) {
         push();
-        translate(cloud.x_pos, cloud.y_pos);
+        translate(cloud.xPos, cloud.yPos);
         scale(cloud.size);
 
         fill(211, 229, 240);
@@ -447,12 +443,10 @@ function drawClouds() {
 // --------------------------------------------------
 
 function drawCanyons() {
-    for (var i = 0; i < canyons.length; i++) {
-        var canyon = canyons[i];
-
+    for (const canyon of canyons) {
         noStroke();
         fill(75, 143, 245);
-        rect(canyon.x_pos, floorPos_y, canyon.width, height - floorPos_y);
+        rect(canyon.xPos, floorPosY, canyon.width, height - floorPosY);
     }
 }
 
@@ -460,12 +454,10 @@ function drawCanyons() {
 // COLLECTABLE STARS
 // --------------------------------------------------
 
-function drawApples() {
-    for (var i = 0; i < apples.length; i++) {
-        var apple = apples[i];
-
-        if (!apple.isFound) {
-            drawCollectableStar(apple.x_pos, apple.y_pos);
+function drawStars() {
+    for (const star of stars) {
+        if (!star.isFound) {
+            drawCollectableStar(star.xPos, star.yPos);
         }
     }
 }
@@ -520,25 +512,19 @@ function drawCollectableStar(x, y) {
 }
 
 // --------------------------------------------------
-// PLATFORM CREATOR
+// PLATFORM FACTORY
+// A simple factory function: each call returns a brand new
+// platform object built from the arguments given to it.
 // --------------------------------------------------
 
-function createPlatform(x, y, length) {
-    return {
-        x: x,
-        y: y,
-        length: length
-    };
-}
+const createPlatform = (x, y, length) => ({ x, y, length });
 
 // --------------------------------------------------
 // DRAW PLATFORMS
 // --------------------------------------------------
 
 function drawPlatforms() {
-    for (var i = 0; i < platforms.length; i++) {
-        var platform = platforms[i];
-
+    for (const platform of platforms) {
         fill(179, 82, 15);
         rect(platform.x, platform.y, platform.length, 25);
 
@@ -561,97 +547,65 @@ function drawPlatforms() {
 function drawFlagpole() {
     stroke(45, 45, 45);
     strokeWeight(8);
-    line(flagpole.x_pos, floorPos_y, flagpole.x_pos, floorPos_y - 180);
+    line(flagpole.xPos, floorPosY, flagpole.xPos, floorPosY - 180);
 
     stroke(90, 90, 90);
     strokeWeight(3);
-    line(flagpole.x_pos - 1, floorPos_y, flagpole.x_pos - 1, floorPos_y - 180);
+    line(flagpole.xPos - 1, floorPosY, flagpole.xPos - 1, floorPosY - 180);
 
     noStroke();
 
     fill(245, 48, 27);
-    triangle(flagpole.x_pos, floorPos_y - 175, flagpole.x_pos + 70, floorPos_y - 150, flagpole.x_pos, floorPos_y - 125);
+    triangle(flagpole.xPos, floorPosY - 175, flagpole.xPos + 70, floorPosY - 150, flagpole.xPos, floorPosY - 125);
 
     fill(255, 63, 36);
-    triangle(flagpole.x_pos + 2, floorPos_y - 170, flagpole.x_pos + 55, floorPos_y - 151, flagpole.x_pos + 2, floorPos_y - 140);
+    triangle(flagpole.xPos + 2, floorPosY - 170, flagpole.xPos + 55, floorPosY - 151, flagpole.xPos + 2, floorPosY - 140);
 
     fill(255);
     textFont("Courier New");
     textSize(13);
     textStyle(BOLD);
     textAlign(CENTER, CENTER);
-    text("FINISH", flagpole.x_pos + 28, floorPos_y - 150);
+    text("FINISH", flagpole.xPos + 28, floorPosY - 150);
     textAlign(LEFT, BASELINE);
 }
 
 // --------------------------------------------------
 // ENEMIES (turtles)
-// Spawn from the left or right edge of the visible screen
-// at a steady interval, walk straight across, and despawn
-// once they've gone well past the opposite edge.
+// Built with a constructor function so each turtle is its own
+// object carrying its own position, direction and speed, with
+// shared behaviour (update/draw/off-screen check) on the
+// prototype. Turtles spawn from the left or right edge of the
+// visible screen, walk straight in, turn back at canyon edges
+// instead of falling in, and despawn once well off-screen.
 // --------------------------------------------------
 
-function spawnEnemy() {
-    var spawnFromLeft = random() < 0.5;
-    var screenEdgeX = spawnFromLeft ? -30 : width + 30;
-    var direction = spawnFromLeft ? 1 : -1;
-
-    enemies.push({
-        x_pos: screenEdgeX - scrollPos,
-        direction: direction,
-        speed: 1.3
-    });
+function Turtle(xPos, direction) {
+    this.xPos = xPos;
+    this.direction = direction;
+    this.speed = 1.3;
 }
 
-function updateEnemies() {
-    enemySpawnTimer++;
+Turtle.prototype.update = function() {
+    const nextX = this.xPos + this.direction * this.speed;
 
-    if (enemySpawnTimer > 180) {
-        spawnEnemy();
-        enemySpawnTimer = 0;
+    if (isOverCanyon(nextX)) {
+        this.direction *= -1;
+    } else {
+        this.xPos = nextX;
     }
+};
 
-    for (var i = enemies.length - 1; i >= 0; i--) {
-        var enemy = enemies[i];
-        var nextX = enemy.x_pos + enemy.direction * enemy.speed;
+Turtle.prototype.isOffScreen = function() {
+    const screenX = this.xPos + scrollPos;
+    return screenX < -100 || screenX > width + 100;
+};
 
-        if (isOverCanyon(nextX)) {
-            enemy.direction *= -1;
-        } else {
-            enemy.x_pos = nextX;
-        }
-
-        var screenX = enemy.x_pos + scrollPos;
-
-        if (screenX < -100 || screenX > width + 100) {
-            enemies.splice(i, 1);
-        }
-    }
-}
-
-function isOverCanyon(x) {
-    for (var i = 0; i < canyons.length; i++) {
-        var canyon = canyons[i];
-
-        if (x > canyon.x_pos && x < canyon.x_pos + canyon.width) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-function drawEnemies() {
-    for (var i = 0; i < enemies.length; i++) {
-        drawTurtle(enemies[i].x_pos, enemies[i].direction);
-    }
-}
-
-function drawTurtle(x, direction) {
+Turtle.prototype.draw = function() {
     push();
 
-    translate(x, floorPos_y);
-    scale(direction * 1.4, 1.4);
+    translate(this.xPos, floorPosY);
+    scale(this.direction * 1.4, 1.4);
     noStroke();
 
     // feet
@@ -680,6 +634,47 @@ function drawTurtle(x, direction) {
     rect(11, -18, 2, 2);
 
     pop();
+};
+
+function spawnEnemy() {
+    const spawnFromLeft = random() < 0.5;
+    const screenEdgeX = spawnFromLeft ? -30 : width + 30;
+    const direction = spawnFromLeft ? 1 : -1;
+
+    enemies.push(new Turtle(screenEdgeX - scrollPos, direction));
+}
+
+function updateEnemies() {
+    enemySpawnTimer++;
+
+    if (enemySpawnTimer > 180) {
+        spawnEnemy();
+        enemySpawnTimer = 0;
+    }
+
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        enemies[i].update();
+
+        if (enemies[i].isOffScreen()) {
+            enemies.splice(i, 1);
+        }
+    }
+}
+
+function isOverCanyon(x) {
+    for (const canyon of canyons) {
+        if (x > canyon.xPos && x < canyon.xPos + canyon.width) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function drawEnemies() {
+    for (const enemy of enemies) {
+        enemy.draw();
+    }
 }
 
 // --------------------------------------------------
@@ -689,9 +684,9 @@ function drawTurtle(x, direction) {
 function drawGameChar() {
     push();
 
-    translate(gameChar_x - scrollPos, gameChar_y);
+    translate(gameCharX - scrollPos, gameCharY);
 
-    var facingRight = true;
+    let facingRight = true;
 
     if (isLeft) {
         facingRight = false;
@@ -706,11 +701,11 @@ function drawGameChar() {
     noStroke();
 
     // Walking animation offsets for legs/feet
-    var stepOffsetL = 0;
-    var stepOffsetR = 0;
+    let stepOffsetL = 0;
+    let stepOffsetR = 0;
 
     if ((isLeft || isRight) && !isFalling && !isPlummeting) {
-        var step = floor(frameCount / 8) % 2;
+        const step = floor(frameCount / 8) % 2;
 
         if (step === 0) {
             stepOffsetL = -3;
@@ -721,7 +716,20 @@ function drawGameChar() {
         }
     }
 
+    drawCharacterShape(stepOffsetL, stepOffsetR, facingRight);
 
+    pop();
+}
+
+// --------------------------------------------------
+// CHARACTER SHAPE
+// The character's body, assuming the caller has already set up
+// the translate/scale for where and how big to draw it. Shared
+// between normal gameplay rendering (drawGameChar) and the big
+// standalone portrait on the level-complete screen.
+// --------------------------------------------------
+
+function drawCharacterShape(stepOffsetL, stepOffsetR, facingRight) {
     // SHOES
 
     fill(95, 60, 35);
@@ -796,8 +804,6 @@ function drawGameChar() {
 
     fill(190, 100, 70);
     rect(-3, -40, 5, 2);
-
-    pop();
 }
 
 // --------------------------------------------------
@@ -808,30 +814,28 @@ function updateGameChar() {
     updateEnemies();
 
     if (isPlummeting) {
-        gameChar_velocity_y += 1;
-        gameChar_y += gameChar_velocity_y;
+        gameCharVelocityY += 1;
+        gameCharY += gameCharVelocityY;
         return;
     }
 
     moveGameChar();
     applyGravity();
 
-    gameChar_world_x = gameChar_x - scrollPos;
+    gameCharWorldX = gameCharX - scrollPos;
     isOnPlatform = false;
 
-    for (var i = 0; i < platforms.length; i++) {
-        var platform = platforms[i];
-
-        if (gameChar_world_x > platform.x && gameChar_world_x < platform.x + platform.length && gameChar_y >= platform.y - 5 && gameChar_y <= platform.y + 20 && gameChar_velocity_y >= 0) {
-            gameChar_y = platform.y;
-            gameChar_velocity_y = 0;
+    for (const platform of platforms) {
+        if (gameCharWorldX > platform.x && gameCharWorldX < platform.x + platform.length && gameCharY >= platform.y - 5 && gameCharY <= platform.y + 20 && gameCharVelocityY >= 0) {
+            gameCharY = platform.y;
+            gameCharVelocityY = 0;
             isFalling = false;
             isOnPlatform = true;
         }
     }
 
     checkCanyons();
-    checkApples();
+    checkStars();
     checkFlagpole();
     checkEnemyCollision();
 }
@@ -842,24 +846,24 @@ function updateGameChar() {
 
 function moveGameChar() {
     if (isLeft) {
-        gameChar_x -= 3;
+        gameCharX -= 3;
     }
 
     if (isRight) {
-        gameChar_x += 3;
+        gameCharX += 3;
     }
 
-    var leftBoundary = width * 0.25;
-    var rightBoundary = width * 0.75;
+    const leftBoundary = width * 0.25;
+    const rightBoundary = width * 0.75;
 
-    if (gameChar_x < leftBoundary) {
-        scrollPos += leftBoundary - gameChar_x;
-        gameChar_x = leftBoundary;
+    if (gameCharX < leftBoundary) {
+        scrollPos += leftBoundary - gameCharX;
+        gameCharX = leftBoundary;
     }
 
-    if (gameChar_x > rightBoundary) {
-        scrollPos -= gameChar_x - rightBoundary;
-        gameChar_x = rightBoundary;
+    if (gameCharX > rightBoundary) {
+        scrollPos -= gameCharX - rightBoundary;
+        gameCharX = rightBoundary;
     }
 }
 
@@ -869,12 +873,12 @@ function moveGameChar() {
 
 function applyGravity() {
     if (!isOnPlatform) {
-        gameChar_velocity_y += 0.7;
-        gameChar_y += gameChar_velocity_y;
+        gameCharVelocityY += 0.7;
+        gameCharY += gameCharVelocityY;
 
-        if (gameChar_y >= floorPos_y) {
-            gameChar_y = floorPos_y;
-            gameChar_velocity_y = 0;
+        if (gameCharY >= floorPosY) {
+            gameCharY = floorPosY;
+            gameCharVelocityY = 0;
             isFalling = false;
         } else {
             isFalling = true;
@@ -888,7 +892,7 @@ function applyGravity() {
 
 function jump() {
     if (!isFalling && !isPlummeting) {
-        gameChar_velocity_y = -16;
+        gameCharVelocityY = -16;
         isFalling = true;
 
         if (jumpSound && jumpSound.isLoaded()) {
@@ -903,13 +907,11 @@ function jump() {
 // --------------------------------------------------
 
 function checkCanyons() {
-    var characterLeft = gameChar_world_x - 11;
-    var characterRight = gameChar_world_x + 11;
+    const characterLeft = gameCharWorldX - 11;
+    const characterRight = gameCharWorldX + 11;
 
-    for (var i = 0; i < canyons.length; i++) {
-        var canyon = canyons[i];
-
-        var insideCanyon = characterRight > canyon.x_pos && characterLeft < canyon.x_pos + canyon.width && gameChar_y >= floorPos_y - 5;
+    for (const canyon of canyons) {
+        const insideCanyon = characterRight > canyon.xPos && characterLeft < canyon.xPos + canyon.width && gameCharY >= floorPosY - 5;
 
         if (insideCanyon) {
             if (!isPlummeting) {
@@ -940,19 +942,17 @@ function checkCanyons() {
 }
 
 // --------------------------------------------------
-// CHECK COLLECTABLES
+// CHECK STARS
 // --------------------------------------------------
 
-function checkApples() {
-    for (var i = 0; i < apples.length; i++) {
-        var apple = apples[i];
-
-        if (!apple.isFound) {
-            var distance = dist(gameChar_world_x, gameChar_y - 40, apple.x_pos, apple.y_pos);
+function checkStars() {
+    for (const star of stars) {
+        if (!star.isFound) {
+            const distance = dist(gameCharWorldX, gameCharY - 40, star.xPos, star.yPos);
 
             if (distance < 30) {
-                apple.isFound = true;
-                game_score++;
+                star.isFound = true;
+                gameScore++;
 
                 if (itemCollectSound && itemCollectSound.isLoaded()) {
                     itemCollectSound.stop();
@@ -968,7 +968,7 @@ function checkApples() {
 // --------------------------------------------------
 
 function checkFlagpole() {
-    var distance = abs(gameChar_world_x - flagpole.x_pos);
+    const distance = abs(gameCharWorldX - flagpole.xPos);
 
     if (distance < 35 && !flagpole.isReached) {
         flagpole.isReached = true;
@@ -989,13 +989,12 @@ function checkFlagpole() {
 // --------------------------------------------------
 
 function checkEnemyCollision() {
-    if (gameChar_y < floorPos_y - 10) {
+    if (gameCharY < floorPosY - 10) {
         return;
     }
 
-    for (var i = 0; i < enemies.length; i++) {
-        var enemy = enemies[i];
-        var distance = abs(gameChar_world_x - enemy.x_pos);
+    for (const enemy of enemies) {
+        const distance = abs(gameCharWorldX - enemy.xPos);
 
         if (distance < 24) {
             stopBackgroundMusic();
@@ -1039,7 +1038,6 @@ function loseLife() {
 
     if (lives > 0) {
         resetAfterLifeLost();
-
     } else {
         gameOver = true;
         isPlummeting = false;
@@ -1071,7 +1069,7 @@ function drawHud() {
     text("STARS", 55, 24);
 
     textSize(25);
-    text(formatApples(game_score), 55, 52);
+    text(formatStars(gameScore), 55, 52);
 
     textAlign(CENTER, TOP);
     textSize(28);
@@ -1094,17 +1092,17 @@ function drawHud() {
 }
 
 // --------------------------------------------------
-// FORMAT APPLES
+// FORMAT STARS
 // --------------------------------------------------
 
-function formatApples(applesCollected) {
-    var appleString = applesCollected.toString();
+function formatStars(starsCollected) {
+    let starString = starsCollected.toString();
 
-    while (appleString.length < 2) {
-        appleString = "0" + appleString;
+    while (starString.length < 2) {
+        starString = `0${starString}`;
     }
 
-    return appleString;
+    return starString;
 }
 
 // --------------------------------------------------
@@ -1112,6 +1110,11 @@ function formatApples(applesCollected) {
 // --------------------------------------------------
 
 function drawEndMessage() {
+    if (levelComplete) {
+        drawLevelCompleteScreen();
+        return;
+    }
+
     noStroke();
 
     fill(255, 255, 255, 230);
@@ -1123,21 +1126,46 @@ function drawEndMessage() {
     textStyle(NORMAL);
     textAlign(CENTER, CENTER);
 
-    if (levelComplete) {
-        textSize(32);
-        text("Level Complete", width / 2, height / 2 - 25);
+    textSize(32);
+    text("Game Over", width / 2, height / 2 - 25);
 
-        textSize(18);
-        text("Score: " + game_score + "    Press R to restart", width / 2, height / 2 + 25);
-    } else if (gameOver) {
-        textSize(32);
-        text("Game Over", width / 2, height / 2 - 25);
-
-        textSize(18);
-        text("Score: " + game_score + "    Press R to restart", width / 2, height / 2 + 25);
-    }
+    textSize(18);
+    text(`Score: ${gameScore}    Press R to restart`, width / 2, height / 2 + 25);
 
     textAlign(LEFT, BASELINE);
+}
+
+// --------------------------------------------------
+// LEVEL COMPLETE SCREEN
+// Full black background, "LEVEL COMPLETE" in the same font as
+// the HUD, and a big standalone portrait of the game character
+// underneath.
+// --------------------------------------------------
+
+function drawLevelCompleteScreen() {
+    background(0);
+
+    noStroke();
+    fill(255);
+    textFont("Courier New");
+    textStyle(BOLD);
+    textAlign(CENTER, CENTER);
+    textSize(54);
+    text("LEVEL 1 COMPLETE", width / 2, height / 2 - 140);
+
+    push();
+    translate(width / 2, height / 2 + 60);
+    scale(2.2);
+    noStroke();
+    drawCharacterShape(0, 0, true);
+    pop();
+
+    fill(255);
+    textSize(18);
+    text(`Score: ${gameScore}    Press R to restart`, width / 2, height / 2 + 100);
+
+    textAlign(LEFT, BASELINE);
+    textStyle(NORMAL);
 }
 
 // --------------------------------------------------
@@ -1145,7 +1173,11 @@ function drawEndMessage() {
 // --------------------------------------------------
 
 function keyPressed() {
- 
+    // A key press is a valid user gesture, so unlock audio here. This
+    // applies to every key - left arrow, right arrow, jump, all of
+    // them - and attemptStartBackgroundMusic() is also called directly
+    // below so the music starts immediately rather than waiting for
+    // the next frame.
     if (typeof userStartAudio === "function") {
         userStartAudio();
     }
