@@ -99,7 +99,7 @@ function drawLevelCompleteScreen() {
     textStyle(BOLD);
     textAlign(CENTER, CENTER);
     textSize(54);
-    text("LEVEL 1 COMPLETE", width / 2, height / 2 - 140);
+    text("GIORGAKIS WIN!", width / 2, height / 2 - 140);
 
     push();
     translate(width / 2, height / 2 + 60);
