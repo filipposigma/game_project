@@ -25,8 +25,176 @@ export const player = {
     isFalling: false,
     isPlummeting: false,
     isDying: false,
-    isOnPlatform: false
+    isOnPlatform: false,
+    facingDirection: 1 // 1 = right, -1 = left
 };
+
+// --------------------------------------------------
+// LASERS
+// --------------------------------------------------
+
+const lasers = [];
+
+const LASER_SPEED = 12;
+const LASER_WIDTH = 24;
+const LASER_HEIGHT = 4;
+const LASER_COOLDOWN_MS = 200;
+const LASER_LIFETIME_FRAMES = 90;
+
+let lastLaserTime = -Infinity;
+
+// Create a laser when the player shoots.
+export function shootLaser() {
+    if (
+        game.gameOver ||
+        game.levelComplete ||
+        player.isDying ||
+        player.isPlummeting
+    ) {
+        return;
+    }
+
+    const now = millis();
+
+    if (now - lastLaserTime < LASER_COOLDOWN_MS) {
+        return;
+    }
+
+    const direction = player.isRight
+        ? 1
+        : player.isLeft
+            ? -1
+            : player.facingDirection;
+
+    player.facingDirection = direction;
+
+    lasers.push({
+        x: player.x - world.scrollPos
+            + direction * (14 + LASER_WIDTH / 2),
+        y: player.y - 26,
+        direction,
+        age: 0
+    });
+
+    lastLaserTime = now;
+}
+
+// Move lasers and check whether they hit enemies.
+function updateLasers() {
+    for (let i = lasers.length - 1; i >= 0; i--) {
+        const laser = lasers[i];
+        const previousX = laser.x;
+
+        laser.x += laser.direction * LASER_SPEED;
+        laser.age++;
+
+        // Check the whole distance travelled this frame.
+        const laserLeft =
+            Math.min(previousX, laser.x) - LASER_WIDTH / 2;
+
+        const laserRight =
+            Math.max(previousX, laser.x) + LASER_WIDTH / 2;
+
+        const laserTop = laser.y - LASER_HEIGHT / 2;
+        const laserBottom = laser.y + LASER_HEIGHT / 2;
+
+        let hitIndex = -1;
+        let closestDistance = Infinity;
+
+        for (let j = 0; j < enemies.length; j++) {
+            const enemy = enemies[j];
+
+            // These dimensions match your turtle drawing.
+            const enemyLeft = enemy.xPos
+                - (enemy.direction === 1 ? 11 : 15) * 1.4;
+
+            const enemyRight = enemy.xPos
+                + (enemy.direction === 1 ? 15 : 11) * 1.4;
+
+            const enemyTop = world.floorPosY - 24 * 1.4;
+            const enemyBottom = world.floorPosY;
+
+            const hasHit =
+                laserRight >= enemyLeft &&
+                laserLeft <= enemyRight &&
+                laserBottom >= enemyTop &&
+                laserTop <= enemyBottom;
+
+            if (hasHit) {
+                const distance = laser.direction === 1
+                    ? Math.max(
+                        0,
+                        enemyLeft - (previousX + LASER_WIDTH / 2)
+                    )
+                    : Math.max(
+                        0,
+                        previousX - LASER_WIDTH / 2 - enemyRight
+                    );
+
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    hitIndex = j;
+                }
+            }
+        }
+
+        if (hitIndex !== -1) {
+            enemies.splice(hitIndex, 1);
+            lasers.splice(i, 1);
+            continue;
+        }
+
+        const screenX = laser.x + world.scrollPos;
+
+        if (
+            laser.age >= LASER_LIFETIME_FRAMES ||
+            screenX + LASER_WIDTH / 2 < -100 ||
+            screenX - LASER_WIDTH / 2 > width + 100
+        ) {
+            lasers.splice(i, 1);
+        }
+    }
+}
+
+// Draw the red lasers.
+export function drawLasers() {
+    push();
+    rectMode(CORNER);
+    noStroke();
+
+    for (const laser of lasers) {
+        // Outer glow
+        fill(255, 40, 60, 70);
+        rect(
+            laser.x - LASER_WIDTH / 2 - 3,
+            laser.y - LASER_HEIGHT / 2 - 3,
+            LASER_WIDTH + 6,
+            LASER_HEIGHT + 6,
+            4
+        );
+
+        // Red beam
+        fill(255, 40, 60);
+        rect(
+            laser.x - LASER_WIDTH / 2,
+            laser.y - LASER_HEIGHT / 2,
+            LASER_WIDTH,
+            LASER_HEIGHT,
+            2
+        );
+
+        // Bright centre
+        fill(255, 235, 235);
+        rect(
+            laser.x - LASER_WIDTH / 2 + 2,
+            laser.y - 1,
+            LASER_WIDTH - 4,
+            2
+        );
+    }
+
+    pop();
+}
 
 // --------------------------------------------------
 // RESET
@@ -43,6 +211,9 @@ export function resetPlayer() {
     player.isPlummeting = false;
     player.isDying = false;
     player.isOnPlatform = false;
+    player.facingDirection = 1;
+    lasers.length = 0;
+    lastLaserTime = -Infinity;
     world.scrollPos = 0;
     flagpole.isReached = false;
 
@@ -71,6 +242,7 @@ export function loseLife() {
         player.isPlummeting = false;
         player.isDying = false;
         player.isFalling = false;
+        lasers.length = 0;
         stopBackgroundMusic();
     }
 }
@@ -92,13 +264,15 @@ export function jump() {
 // --------------------------------------------------
 
 function moveGameChar() {
-    if (player.isLeft) {
-        player.x -= 5;
-    }
+if (player.isLeft) {
+    player.x -= 5;
+    player.facingDirection = -1;
+}
 
-    if (player.isRight) {
-        player.x += 5;
-    }
+if (player.isRight) {
+    player.x += 5;
+    player.facingDirection = 1;
+}
 
     const leftBoundary = width * 0.25;
     const rightBoundary = width * 0.75;
@@ -150,6 +324,7 @@ function checkCanyons() {
                 player.isFalling = true;
                 player.isLeft = false;
                 player.isRight = false;
+                lasers.length = 0;
 
                 stopBackgroundMusic();
                 playFallSound();
@@ -167,12 +342,22 @@ function checkCanyons() {
 function checkStars() {
     for (const star of stars) {
         if (!star.isFound) {
-            const distance = dist(player.worldX, player.y - 40, star.xPos, star.yPos);
+            const distance = dist(
+                player.worldX,
+                player.y - 40,
+                star.xPos,
+                star.yPos
+            );
 
             if (distance < 30) {
                 star.isFound = true;
                 game.score++;
                 playItemCollectSound();
+
+                // Award an extra life for every 10 stars.
+                if (game.score % 10 === 0) {
+                    game.lives++;
+                }
             }
         }
     }
@@ -190,6 +375,7 @@ function checkFlagpole() {
         game.levelComplete = true;
         player.isLeft = false;
         player.isRight = false;
+        lasers.length = 0;
         stopBackgroundMusic();
         playLevelCompleteSound();
     }
@@ -230,6 +416,7 @@ function startDeathBounce() {
     player.isLeft = false;
     player.isRight = false;
     player.velocityY = -12;
+    lasers.length = 0;
 }
 
 // --------------------------------------------------
@@ -269,6 +456,7 @@ export function updateGameChar() {
     checkCanyons();
     checkStars();
     checkFlagpole();
+    updateLasers();
     checkEnemyCollision();
 }
 
@@ -281,11 +469,7 @@ export function drawGameChar() {
 
     translate(player.x - world.scrollPos, player.y);
 
-    let facingRight = true;
-
-    if (player.isLeft) {
-        facingRight = false;
-    }
+    const facingRight = player.facingDirection === 1;
 
     if (facingRight) {
         scale(1, 1);

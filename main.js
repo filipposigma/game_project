@@ -30,7 +30,9 @@ import {
     jump,
     loseLife,
     updateGameChar,
-    drawGameChar
+    drawGameChar,
+    shootLaser,
+    drawLasers
 } from './player.js';
 import {drawHud, drawEndMessage} from './ui.js';
 
@@ -102,6 +104,7 @@ function draw() {
     drawStars();
     drawFlagpole();
     drawEnemies();
+    drawLasers();
     drawGameChar();
     pop();
 
@@ -140,9 +143,13 @@ function keyPressed() {
         player.isRight = true;
     }
 
-    if (keyCode === UP_ARROW || key === " ") {
-        jump();
-    }
+    if (keyCode === UP_ARROW) {
+    jump();
+}
+
+    if (key === " ") {
+    shootLaser();
+}
 }
 
 // --------------------------------------------------
