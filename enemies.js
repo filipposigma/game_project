@@ -90,10 +90,10 @@ export function spawnEnemy() {
 export function updateEnemies() {
     enemySpawnTimer++;
 
-    if (enemySpawnTimer > 180) {
-        spawnEnemy();
-        enemySpawnTimer = 0;
-    }
+    if (enemySpawnTimer > 60) {
+    spawnEnemy();
+    enemySpawnTimer = 0;
+}
 
     for (let i = enemies.length - 1; i >= 0; i--) {
         enemies[i].update();
