@@ -12,7 +12,8 @@ import {
     playItemCollectSound,
     playLevelCompleteSound,
     playGameOverSound,
-    playJumpSound
+    playJumpSound,
+    playLaserSound
 } from './audio.js';
 
 export const player = {
@@ -77,6 +78,7 @@ export function shootLaser() {
     });
 
     lastLaserTime = now;
+    playLaserSound();
 }
 
 // Move lasers and check whether they hit enemies.

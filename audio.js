@@ -6,6 +6,7 @@ import {game} from './game.js';
 
 export const audioState = {
     jumpSound: null,
+    laserSound: null,
     backgroundMusic: null,
     fallSound: null,
     fallSoundPlayed: false,
@@ -18,6 +19,12 @@ export const audioState = {
 
 export function preloadSounds() {
     soundFormats("mp3", "wav");
+
+    audioState.laserSound = loadSound(
+    "assets/laser.wav",
+    () => {},
+    () => { audioState.laserSound = null; }
+);
 
     audioState.jumpSound = loadSound(
         "assets/jump.wav",
@@ -168,6 +175,15 @@ export function playJumpSound() {
     }
 }
 
+    export function playLaserSound() {
+    const laserSound = audioState.laserSound;
+
+    if (laserSound && laserSound.isLoaded()) {
+        laserSound.setVolume(3);
+        laserSound.play();
+    }
+}
+
 export function resetOneShotSounds() {
     audioState.fallSoundPlayed = false;
     audioState.suppressMusicForFall = false;
@@ -183,5 +199,9 @@ export function resetOneShotSounds() {
 
     if (audioState.gameOverSound && audioState.gameOverSound.isPlaying()) {
         audioState.gameOverSound.stop();
+
+        if (audioState.laserSound && audioState.laserSound.isPlaying()) {
+    audioState.laserSound.stop();
+}
     }
 }
