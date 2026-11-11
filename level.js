@@ -49,17 +49,28 @@ export function initialiseLevel() {
         {xPos: 2100, height: 275}
     ];
 
-    stars = [
-        {xPos: 100, yPos: world.floorPosY - 25, isFound: false},
-        {xPos: 470, yPos: world.floorPosY - 145, isFound: false},
-        {xPos: 735, yPos: world.floorPosY - 25, isFound: false},
-        {xPos: 1065, yPos: world.floorPosY - 165, isFound: false},
-        {xPos: 1560, yPos: world.floorPosY - 130, isFound: false},
-        {xPos: 2140, yPos: world.floorPosY - 190, isFound: false},
-        {xPos: 2390, yPos: world.floorPosY - 25, isFound: false},
-        {xPos: 2360, yPos: world.floorPosY - 125, isFound: false},
-        {xPos: 2520, yPos: world.floorPosY - 225, isFound: false}
-    ];
+stars = [
+    {xPos: 100, yPos: world.floorPosY - 25, isFound: false},
+    {xPos: 180, yPos: world.floorPosY - 25, isFound: false},
+    {xPos: 470, yPos: world.floorPosY - 145, isFound: false},
+    {xPos: 540, yPos: world.floorPosY - 25, isFound: false},
+    {xPos: 620, yPos: world.floorPosY - 25, isFound: false},
+    {xPos: 735, yPos: world.floorPosY - 25, isFound: false},
+    {xPos: 950, yPos: world.floorPosY - 25, isFound: false},
+    {xPos: 1065, yPos: world.floorPosY - 165, isFound: false},
+    {xPos: 1160, yPos: world.floorPosY - 25, isFound: false},
+    {xPos: 1240, yPos: world.floorPosY - 25, isFound: false},
+    {xPos: 1475, yPos: world.floorPosY - 25, isFound: false},
+    {xPos: 1560, yPos: world.floorPosY - 130, isFound: false},
+    {xPos: 1680, yPos: world.floorPosY - 25, isFound: false},
+    {xPos: 1800, yPos: world.floorPosY - 25, isFound: false},
+    {xPos: 2040, yPos: world.floorPosY - 25, isFound: false},
+    {xPos: 2140, yPos: world.floorPosY - 190, isFound: false},
+    {xPos: 2220, yPos: world.floorPosY - 25, isFound: false},
+    {xPos: 2360, yPos: world.floorPosY - 125, isFound: false},
+    {xPos: 2390, yPos: world.floorPosY - 25, isFound: false},
+    {xPos: 2520, yPos: world.floorPosY - 225, isFound: false}
+];
 
     platforms = [
         createPlatform(450, world.floorPosY - 100, 50),
